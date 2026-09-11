@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloco 1 - REMEMBER</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: #FFF8F0;
+      color: #222222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .widget-container {
+      background-color: #FFFFFF;
+      width: 100%;
+      max-width: 650px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(30, 90, 168, 0.12);
+      border: 2px solid #1E5AA8;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 520px;
+    }
+
+    /* Header & Progress */
+    .header {
+      padding: 20px 24px 12px;
+      background-color: #FFFFFF;
+      border-bottom: 1px solid #EFEFEF;
+    }
+
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .item-counter {
+      color: #1E5AA8;
+    }
+
+    .score-counter {
+      color: #1E5AA8;
+      background-color: #F0F6FF;
+      padding: 4px 12px;
+      border-radius: 12px;
+      border: 1px solid #1E5AA8;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background-color: #EAEAEA;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background-color: #FF7A00;
+      transition: width 0.3s ease;
+    }
+
+    /* Card Content Container */
+    .content-area {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .type-badge {
+      align-self: flex-start;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #1E5AA8;
+      background-color: #F0F6FF;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+
+    .prompt-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1E5AA8;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    /* Audio Button */
+    .audio-btn-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .btn-audio {
+      background-color: #FF7A00;
+      color: #FFFFFF;
+      border: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.1s ease, background-color 0.2s ease;
+      box-shadow: 0 4px 10px rgba(255, 122, 0, 0.3);
+    }
+
+    .btn-audio:hover:not(:disabled) {
+      transform: scale(1.05);
+      background-color: #E66E00;
+    }
+
+    .btn-audio:disabled {
+      background-color: #CCCCCC;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .btn-audio svg {
+      width: 24px;
+      height: 24px;
+      fill: #FFFFFF;
+    }
+
+    .audio-label {
+      font-size: 14px;
+      color: #666;
+      font-style: italic;
+    }
+
+    /* Multiple Choice Options */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .btn-option {
+      background-color: #FFFFFF;
+      border: 2px solid #1E5AA8;
+      color: #1E5AA8;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-option:hover:not(:disabled) {
+      background-color: #F0F6FF;
+    }
+
+    .btn-option:disabled {
+      cursor: default;
+    }
+
+    .btn-option.selected-correct {
+      border-color: #1E5AA8;
+      background-color: #F0F6FF;
+      color: #1E5AA8;
+      font-weight: 700;
+    }
+
+    .btn-option.selected-incorrect {
+      border-color: #C75000;
+      background-color: #FFF3EC;
+      color: #C75000;
+      font-weight: 700;
+    }
+
+    /* Flashcard */
+    .flashcard-box {
+      perspective: 1000px;
+      width: 100%;
+      height: 180px;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .flashcard-box.flipped .flashcard-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      border: 2px solid #1E5AA8;
+    }
+
+    .flashcard-front {
+      background-color: #F0F6FF;
+      color: #1E5AA8;
+      font-size: 18px;
+      font-weight: 600;
+      white-space: pre-line;
+    }
+
+    .flashcard-back {
+      background-color: #FF7A00;
+      color: #FFFFFF;
+      font-size: 20px;
+      font-weight: 700;
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-hint-text {
+      font-size: 12px;
+      margin-top: 8px;
+      opacity: 0.8;
+      font-weight: normal;
+    }
+
+    /* Word Scramble Input */
+    .scramble-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .scramble-box {
+      background-color: #F0F6FF;
+      border: 2px dashed #1E5AA8;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1E5AA8;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #1E5AA8;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: #FF7A00;
+    }
+
+    .btn-submit-scramble {
+      background-color: #FF7A00;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-submit-scramble:hover:not(:disabled) {
+      background-color: #E66E00;
+    }
+
+    .btn-hint {
+      background: none;
+      border: none;
+      color: #1E5AA8;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 14px;
+      align-self: flex-start;
+      margin-top: 4px;
+    }
+
+    .hint-text-box {
+      font-size: 14px;
+      color: #555;
+      background-color: #FFF8F0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border-left: 3px solid #FF7A00;
+      margin-top: 6px;
+    }
+
+    /* True / False Buttons */
+    .tf-container {
+      display: flex;
+      gap: 16px;
+    }
+
+    .btn-tf {
+      flex: 1;
+      padding: 18px;
+      border-radius: 12px;
+      border: 2px solid #1E5AA8;
+      background-color: #FFFFFF;
+      color: #1E5AA8;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-tf:hover:not(:disabled) {
+      background-color: #F0F6FF;
+    }
+
+    /* Feedback Banner */
+    .feedback-banner {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .feedback-banner.correct {
+      display: block;
+      background-color: #F0F6FF;
+      border: 2px solid #1E5AA8;
+      color: #1E5AA8;
+    }
+
+    .feedback-banner.incorrect {
+      display: block;
+      background-color: #FFF3EC;
+      border: 2px solid #C75000;
+      color: #C75000;
+    }
+
+    .feedback-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Controls Footer */
+    .footer {
+      padding: 16px 24px;
+      border-top: 1px solid #EFEFEF;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      background-color: #FFFFFF;
+    }
+
+    .btn-nav {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-prev {
+      background-color: #FFFFFF;
+      color: #1E5AA8;
+      border: 2px solid #1E5AA8;
+    }
+
+    .btn-prev:hover:not(:disabled) {
+      background-color: #F0F6FF;
+    }
+
+    .btn-next {
+      background-color: #FF7A00;
+      color: #FFFFFF;
+    }
+
+    .btn-next:hover:not(:disabled) {
+      background-color: #E66E00;
+    }
+
+    .btn-nav:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: #CCCCCC;
+      background-color: #EAEAEA;
+      color: #888888;
+    }
+
+    /* Summary Screen */
+    .summary-container {
+      text-align: center;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .summary-title {
+      font-size: 26px;
+      color: #1E5AA8;
+      font-weight: 800;
+    }
+
+    .summary-score-card {
+      background-color: #F0F6FF;
+      border: 3px solid #1E5AA8;
+      border-radius: 20px;
+      padding: 24px 40px;
+      margin: 12px 0;
+    }
+
+    .summary-score-number {
+      font-size: 48px;
+      font-weight: 900;
+      color: #FF7A00;
+    }
+
+    .summary-score-label {
+      font-size: 16px;
+      color: #1E5AA8;
+      font-weight: 700;
+    }
+
+    .summary-msg {
+      font-size: 16px;
+      color: #444;
+      max-width: 400px;
+      line-height: 1.5;
+    }
+
+    .btn-restart {
+      background-color: #FF7A00;
+      color: white;
+      padding: 14px 32px;
+      border-radius: 12px;
+      border: none;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-restart:hover {
+      background-color: #E66E00;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="widget-container">
+  <!-- Header with progress -->
+  <div class="header" id="widget-header">
+    <div class="meta-bar">
+      <span class="item-counter" id="item-counter">Item 1 de 16</span>
+      <span class="score-counter" id="score-counter">Acertos: 0 de 14</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="content-area" id="content-area">
+    <!-- Dynamic item content rendered via JS -->
+  </div>
+
+  <!-- Footer Navigation -->
+  <div class="footer" id="widget-footer">
+    <button class="btn-nav btn-prev" id="btn-prev" onclick="prevItem()">Anterior</button>
+    <button class="btn-nav btn-next" id="btn-next" onclick="nextItem()" disabled>Próximo</button>
+  </div>
+</div>
+
+<script>
+  // JSON Data Injection
+  const quizData = {"prompt_source": "C", "topic": "Closed Questions and Yes/no + subject + auxiliary Answers (do - did - will - would)", "theme": "B. IMMIGRANT", "cefr_level": "A1", "accent": "en-GB", "brand": "Teacher dos Famosos", "module_id": "1_remember", "audio_ratio_target": 0.4, "items": [{"type": "audio_quiz", "audio_text": "Does Maria Luísa wear a uniform?", "sentence_with_blank": "___ Maria Luísa wear a uniform?", "options": ["Does", "Do", "Did"], "correct_index": 0, "feedback_correct": "Perfeito! 👏 Usamos 'Does' para a 3ª pessoa (she) no presente simples.", "feedback_incorrect": "Atenção! Para 'she' (Maria Luísa) no presente, usaremos 'Does'."}, {"type": "audio_quiz", "audio_text": "Did she start school yesterday?", "sentence_with_blank": "___ she start school yesterday?", "options": ["Will", "Did", "Does"], "correct_index": 1, "feedback_correct": "Muito bem! 🎉 'Yesterday' indica passado, por isso usamos 'Did'.", "feedback_incorrect": "Ops! Para perguntas no passado simples, o auxiliar correto é 'Did'."}, {"type": "audio_quiz", "audio_text": "Will you visit the church on Sunday?", "sentence_with_blank": "___ you visit the church on Sunday?", "options": ["Would", "Did", "Will"], "correct_index": 2, "feedback_correct": "Excelente! 'Will' é usado para fazer perguntas sobre o futuro.", "feedback_incorrect": "Lembre-se: para ações futuras simples, use o auxiliar 'Will'."}, {"type": "listening_quiz", "audio_text": "Does Maria Luísa like her new teacher? Yes, she does.", "options": ["Yes, she does.", "No, she didn't.", "Yes, she will."], "correct_index": 0, "feedback_correct": "Ótimo ouvido! 🎧 A pergunta começou com 'Does', então a resposta curta termina com 'does'.", "feedback_incorrect": "Tente novamente. A pergunta está no presente ('Does...?'), então a resposta é 'Yes, she does'."}, {"type": "listening_quiz", "audio_text": "Did the students sing at church? Yes, they did.", "options": ["Yes, they do.", "Yes, they did.", "No, they won't."], "correct_index": 1, "feedback_correct": "Correto! 🌟 Pergunta no passado com 'Did' exige resposta curta com 'did'.", "feedback_incorrect": "Atenção ao tempo verbal: a pergunta usa 'Did', logo a resposta usa 'did'."}, {"type": "listening_quiz", "audio_text": "Would you like a cup of tea? Yes, I would.", "options": ["Yes, I do.", "Yes, I will.", "Yes, I would."], "correct_index": 2, "feedback_correct": "Boa! ☕ 'Would' na pergunta se repete na resposta curta.", "feedback_incorrect": "Repare no verbo auxiliar: a pergunta usa 'Would', então responda com 'would'."}, {"type": "text_quiz", "sentence_with_blank": "___ Maria Luísa go to school by bus?", "options": ["Does", "Did", "Would"], "correct_index": 0, "feedback_correct": "Certinho! Para rotinas no presente com 'she', usava-se 'Does'.", "feedback_incorrect": "Para rotinas no presente simples (ela/she), o auxiliar é 'Does'."}, {"type": "text_quiz", "sentence_with_blank": "Did you meet the pastor yesterday? Yes, I ___.", "options": ["do", "did", "will"], "correct_index": 1, "feedback_correct": "Perfeito! A pergunta usou 'Did', então a resposta curta usa 'did'.", "feedback_incorrect": "Em respostas curtas, mantemos o mesmo auxiliar da pergunta: 'did'."}, {"type": "text_quiz", "sentence_with_blank": "___ you like to attend the church concert tonight?", "options": ["Do", "Did", "Would"], "correct_index": 2, "feedback_correct": "Muito bem! 'Would you like...?' é a forma cortês para convites.", "feedback_incorrect": "Para oferecer ou convidar educadamente, usamos 'Would you like...?'."}, {"type": "text_quiz", "sentence_with_blank": "Will Maria Luísa attend the Sunday school?", "options": ["Yes, she will.", "Yes, she does.", "Yes, she did."], "correct_index": 0, "feedback_correct": "Excelente! Pergunta com 'Will' responde com 'will'.", "feedback_incorrect": "Cuidado! A pergunta está no futuro ('Will...?'), então use 'will' na resposta."}, {"type": "flashcard_flip", "front": "Pergunta: Does she eat school lunch?\nResposta curta afirmativa:", "back": "Yes, she does.", "feedback_correct": "Ótimo! Você memorizou a estrutura do presente simples.", "feedback_incorrect": "Revise a regra: Presente com 'Does' -> 'Yes, [sujeito] does.'"}, {"type": "flashcard_flip", "front": "Pergunta: Did they finish the homework?\nResposta curta negativa:", "back": "No, they didn't.", "feedback_correct": "Excelente! Resposta negativa no passado usa 'didn't'.", "feedback_incorrect": "Para o passado negativo, a forma curta é 'No, [sujeito] didn't.'"}, {"type": "word_scramble", "scrambled": "you / Will / the service / attend / ?", "correct_answer": "Will you attend the service?", "hint": "Monte a pergunta no futuro para o evento da igreja.", "feedback_correct": "Perfeito! Auxiliar 'Will' vem no início da pergunta.", "feedback_incorrect": "Em perguntas diretas, coloque o auxiliar 'Will' antes do sujeito 'you'."}, {"type": "word_scramble", "scrambled": "she / Did / her teacher / meet / ?", "correct_answer": "Did she meet her teacher?", "hint": "Monte a pergunta no passado sobre a escola.", "feedback_correct": "Excelente ordem de palavras!", "feedback_incorrect": "A ordem correta é: Auxiliar (Did) + Sujeito (she) + Verbo (meet) + Complemento?"}, {"type": "true_false", "statement": "Para responder à pergunta 'Will she go to school?', a resposta curta é 'Yes, she does'.", "correct_answer": false, "explanation": "Falso! A pergunta usou o auxiliar de futuro 'Will', portanto a resposta correta é 'Yes, she will'."}, {"type": "true_false", "statement": "A pergunta 'Would you help at church?' é um convite ou pedido educado.", "correct_answer": true, "explanation": "Verdadeiro! Usamos 'Would' para fazer pedidos e convites corteses."}]};
+
+  // State Management
+  let currentIndex = 0;
+  const totalItems = quizData.items.length;
+  
+  // Calculate total scored items (excluding flashcards)
+  const scoredItems = quizData.items.filter(item => item.type !== 'flashcard_flip');
+  const totalScored = scoredItems.length;
+
+  // Track state for each item: { answered: boolean, isCorrect: boolean, userChoice: any, flipped: boolean }
+  const itemStates = quizData.items.map(() => ({
+    answered: false,
+    isCorrect: false,
+    userChoice: null,
+    flipped: false,
+    hintShown: false
+  }));
+
+  // Speech Synthesis setup
+  let synth = window.speechSynthesis;
+  let voices = [];
+
+  function loadVoices() {
+    if ('speechSynthesis' in window) {
+      voices = synth.getVoices();
+    }
+  }
+
+  if ('speechSynthesis' in window) {
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }
+
+  function speakText(text) {
+    if (!('speechSynthesis' in window) || !text) return;
+    synth.cancel(); // Stop current speech
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    const targetLang = quizData.accent || 'en-GB';
+    
+    let matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang.toLowerCase())) ||
+                       voices.find(v => v.lang.toLowerCase().startsWith('en'));
+
+    if (matchedVoice) {
+      utterance.voice = matchedVoice;
+    }
+    utterance.lang = matchedVoice ? matchedVoice.lang : targetLang;
+    synth.speak(utterance);
+  }
+
+  // Exact comparison rule helper
+  function normalizeString(str) {
+    if (!str) return '';
+    let s = String(str).trim();
+    s = s.replace(/\s+/g, ' ');
+    s = s.toLowerCase();
+    s = s.replace(/[.,!?;:]+$/, '');
+    s = s.replace(/^["']|["']$/g, '');
+    return s;
+  }
+
+  function isAnswerExactMatch(userInput, target) {
+    const normInput = normalizeString(userInput);
+    if (Array.isArray(target)) {
+      return target.some(t => normalizeString(t) === normInput);
+    }
+    return normalizeString(target) === normInput;
+  }
+
+  // Calculate current score
+  function getScore() {
+    return itemStates.reduce((acc, state, idx) => {
+      if (quizData.items[idx].type !== 'flashcard_flip' && state.answered && state.isCorrect) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+  }
+
+  // Render current item
+  function renderItem() {
+    const item = quizData.items[currentIndex];
+    const state = itemStates[currentIndex];
+    const contentArea = document.getElementById('content-area');
+    const btnNext = document.getElementById('btn-next');
+    const btnPrev = document.getElementById('btn-prev');
+
+    // Update Meta Progress
+    document.getElementById('item-counter').innerText = `Item ${currentIndex + 1} de ${totalItems}`;
+    document.getElementById('score-counter').innerText = `Acertos: ${getScore()} de ${totalScored}`;
+    const progressPercent = ((currentIndex + 1) / totalItems) * 100;
+    document.getElementById('progress-bar-fill').style.width = `${progressPercent}%`;
+
+    // Footer buttons state
+    btnPrev.disabled = (currentIndex === 0);
+    btnNext.innerText = (currentIndex === totalItems - 1) ? "Finalizar" : "Próximo";
+    btnNext.disabled = !state.answered && !state.flipped;
+
+    let html = '';
+
+    // Render by type
+    if (item.type === 'audio_quiz') {
+      html += `<div class="type-badge">Quiz de Áudio</div>`;
+      html += `<div class="prompt-text">${item.sentence_with_blank.replace('___', '______')}</div>`;
+      
+      // Audio button unlocked ONLY AFTER answered
+      const audioDisabled = !state.answered ? 'disabled' : '';
+      const audioLabel = !state.answered ? 'Áudio liberado após responder' : 'Ouvir frase completa';
+      html += `
+        <div class="audio-btn-container">
+          <button class="btn-audio" ${audioDisabled} onclick="speakText('${escapeQuotes(item.audio_text)}')" title="${audioLabel}">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+          <span class="audio-label">${audioLabel}</span>
+        </div>
+      `;
+      
+      html += `<div class="options-grid">`;
+      item.options.forEach((opt, idx) => {
+        let optClass = '';
+        if (state.answered) {
+          if (idx === state.userChoice) {
+            optClass = state.isCorrect ? 'selected-correct' : 'selected-incorrect';
+          }
+        }
+        html += `<button class="btn-option ${optClass}" ${state.answered ? 'disabled' : ''} onclick="handleMultipleChoice(${idx})">${opt}</button>`;
+      });
+      html += `</div>`;
+
+    } else if (item.type === 'listening_quiz') {
+      html += `<div class="type-badge">Quiz de Escuta</div>`;
+      html += `<div class="prompt-text">Ouça o áudio e escolha a resposta correta:</div>`;
+      
+      // Audio button available IMMEDIATELY
+      html += `
+        <div class="audio-btn-container">
+          <button class="btn-audio" onclick="speakText('${escapeQuotes(item.audio_text)}')" title="Ouvir áudio">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+          <span class="audio-label">Clique para ouvir</span>
+        </div>
+      `;
+
+      html += `<div class="options-grid">`;
+      item.options.forEach((opt, idx) => {
+        let optClass = '';
+        if (state.answered) {
+          if (idx === state.userChoice) {
+            optClass = state.isCorrect ? 'selected-correct' : 'selected-incorrect';
+          }
+        }
+        html += `<button class="btn-option ${optClass}" ${state.answered ? 'disabled' : ''} onclick="handleMultipleChoice(${idx})">${opt}</button>`;
+      });
+      html += `</div>`;
+
+    } else if (item.type === 'text_quiz') {
+      html += `<div class="type-badge">Quiz de Texto</div>`;
+      html += `<div class="prompt-text">${item.sentence_with_blank.replace('___', '______')}</div>`;
+      
+      html += `<div class="options-grid">`;
+      item.options.forEach((opt, idx) => {
+        let optClass = '';
+        if (state.answered) {
+          if (idx === state.userChoice) {
+            optClass = state.isCorrect ? 'selected-correct' : 'selected-incorrect';
+          }
+        }
+        html += `<button class="btn-option ${optClass}" ${state.answered ? 'disabled' : ''} onclick="handleMultipleChoice(${idx})">${opt}</button>`;
+      });
+      html += `</div>`;
+
+    } else if (item.type === 'flashcard_flip') {
+      html += `<div class="type-badge">Flashcard</div>`;
+      html += `
+        <div class="flashcard-box ${state.flipped ? 'flipped' : ''}" onclick="flipCard()">
+          <div class="flashcard-inner">
+            <div class="flashcard-front">
+              ${escapeHtml(item.front)}
+              <span class="flashcard-hint-text">(Clique para virar)</span>
+            </div>
+            <div class="flashcard-back">
+              ${escapeHtml(item.back)}
+            </div>
+          </div>
+        </div>
+      `;
+
+    } else if (item.type === 'word_scramble') {
+      html += `<div class="type-badge">Palavras Embaralhadas</div>`;
+      html += `<div class="prompt-text">Reordene as palavras para formar a frase correta:</div>`;
+      html += `<div class="scramble-container">`;
+      html += `<div class="scramble-box">${item.scrambled}</div>`;
+      
+      if (!state.answered) {
+        html += `<input type="text" id="scramble-input" class="input-field" placeholder="Digite a frase completa..." value="${state.userChoice || ''}" onkeypress="if(event.key==='Enter') handleScrambleSubmit()">`;
+        html += `<button class="btn-submit-scramble" onclick="handleScrambleSubmit()">Confirmar Resposta</button>`;
+      } else {
+        html += `<input type="text" class="input-field" value="${escapeHtml(state.userChoice || '')}" disabled>`;
+      }
+
+      if (item.hint) {
+        html += `<button class="btn-hint" onclick="toggleHint()">` + (state.hintShown ? "Ocultar Dica" : "💡 Ver Dica") + `</button>`;
+        if (state.hintShown) {
+          html += `<div class="hint-text-box">${escapeHtml(item.hint)}</div>`;
+        }
+      }
+      html += `</div>`;
+
+    } else if (item.type === 'true_false') {
+      html += `<div class="type-badge">Verdadeiro ou Falso</div>`;
+      html += `<div class="prompt-text">${item.statement}</div>`;
+      html += `<div class="tf-container">`;
+      
+      let trueClass = '', falseClass = '';
+      if (state.answered) {
+        if (state.userChoice === true) trueClass = state.isCorrect ? 'selected-correct' : 'selected-incorrect';
+        if (state.userChoice === false) falseClass = state.isCorrect ? 'selected-correct' : 'selected-incorrect';
+      }
+
+      html += `<button class="btn-tf ${trueClass}" ${state.answered ? 'disabled' : ''} onclick="handleTrueFalse(true)">Verdadeiro</button>`;
+      html += `<button class="btn-tf ${falseClass}" ${state.answered ? 'disabled' : ''} onclick="handleTrueFalse(false)">Falso</button>`;
+      html += `</div>`;
+    }
+
+    // Feedback banner section
+    if (state.answered || (item.type === 'flashcard_flip' && state.flipped)) {
+      const isOk = state.isCorrect || item.type === 'flashcard_flip';
+      const feedbackClass = isOk ? 'correct' : 'incorrect';
+      const titleText = isOk ? '✓ Correto!' : '✕ Incorreto!';
+      
+      let msg = '';
+      if (item.type === 'true_false') {
+        msg = item.explanation;
+      } else if (isOk) {
+        msg = item.feedback_correct || 'Excelente!';
+      } else {
+        msg = item.feedback_incorrect || 'Tente prestar atenção na estrutura.';
+      }
+
+      html += `
+        <div class="feedback-banner ${feedbackClass}">
+          <div class="feedback-title">${titleText}</div>
+          <div>${escapeHtml(msg)}</div>
+        </div>
+      `;
+    }
+
+    contentArea.innerHTML = html;
+  }
+
+  // Handlers
+  function handleMultipleChoice(index) {
+    const item = quizData.items[currentIndex];
+    const state = itemStates[currentIndex];
+    if (state.answered) return;
+
+    state.answered = true;
+    state.userChoice = index;
+    state.isCorrect = (index === item.correct_index);
+
+    renderItem();
+  }
+
+  function handleTrueFalse(choice) {
+    const item = quizData.items[currentIndex];
+    const state = itemStates[currentIndex];
+    if (state.answered) return;
+
+    state.answered = true;
+    state.userChoice = choice;
+    state.isCorrect = (choice === item.correct_answer);
+
+    renderItem();
+  }
+
+  function handleScrambleSubmit() {
+    const inputEl = document.getElementById('scramble-input');
+    if (!inputEl) return;
+    const val = inputEl.value;
+    if (!val.trim()) return;
+
+    const item = quizData.items[currentIndex];
+    const state = itemStates[currentIndex];
+    if (state.answered) return;
+
+    state.answered = true;
+    state.userChoice = val;
+    state.isCorrect = isAnswerExactMatch(val, item.correct_answer);
+
+    renderItem();
+  }
+
+  function flipCard() {
+    const state = itemStates[currentIndex];
+    state.flipped = !state.flipped;
+    state.answered = true; // Flashing card counts as interacted
+    renderItem();
+  }
+
+  function toggleHint() {
+    const state = itemStates[currentIndex];
+    state.hintShown = !state.hintShown;
+    renderItem();
+  }
+
+  function nextItem() {
+    if (currentIndex < totalItems - 1) {
+      currentIndex++;
+      renderItem();
+    } else {
+      showSummary();
+    }
+  }
+
+  function prevItem() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderItem();
+    }
+  }
+
+  function showSummary() {
+    document.getElementById('widget-header').classList.add('hidden');
+    document.getElementById('widget-footer').classList.add('hidden');
+    
+    const score = getScore();
+    const percent = Math.round((score / totalScored) * 100);
+
+    let msg = "Excelente trabalho! Você revisou todas as estruturas essenciais do bloco.";
+    if (percent < 70) {
+      msg = "Bom esforço! Você pode clicar em 'Revisar' para rever os conceitos e praticar mais.";
+    }
+
+    const html = `
+      <div class="summary-container">
+        <div class="summary-title">Bloco 1 Concluído! 🎉</div>
+        <div class="summary-score-card">
+          <div class="summary-score-number">${score} / ${totalScored}</div>
+          <div class="summary-score-label">respostas corretas</div>
+        </div>
+        <div class="summary-msg">${msg}</div>
+        <button class="btn-restart" onclick="restartQuiz()">Revisar Exercícios</button>
+      </div>
+    `;
+
+    document.getElementById('content-area').innerHTML = html;
+  }
+
+  function restartQuiz() {
+    currentIndex = 0;
+    document.getElementById('widget-header').classList.remove('hidden');
+    document.getElementById('widget-footer').classList.remove('hidden');
+    renderItem();
+  }
+
+  // Utility functions
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function escapeQuotes(str) {
+    if (!str) return '';
+    return String(str).replace(/'/g, "\\'");
+  }
+
+  // Initialize
+  window.onload = () => {
+    renderItem();
+  };
+</script>
+
+</body>
+</html>
