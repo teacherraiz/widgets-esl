@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloco 6 - Produção Livre (Create)</title>
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --secondary: #1E5AA8;
+      --bg: #FFF8F0;
+      --card-bg: #FFFFFF;
+      --text: #2C3E50;
+      --text-muted: #6C757D;
+      --border: #E2E8F0;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .widget-container {
+      width: 100%;
+      max-width: 680px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #FFFFFF;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--secondary);
+    }
+
+    .counter {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: #FFF0E5;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background-color: #E2E8F0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Main Content */
+    .content {
+      padding: 24px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .scenario-box {
+      background-color: #F0F4F9;
+      border-left: 4px solid var(--secondary);
+      padding: 14px 16px;
+      border-radius: 4px 8px 8px 4px;
+      font-size: 0.95rem;
+      color: var(--secondary);
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .prompt-text {
+      font-size: 1rem;
+      color: var(--text);
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: var(--text);
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      border-color: var(--secondary);
+    }
+
+    /* Voice Recording Controls */
+    .voice-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-voice {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background-color: #F0F4F9;
+      color: var(--secondary);
+      border: 1px solid var(--secondary);
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-voice:hover {
+      background-color: var(--secondary);
+      color: #FFFFFF;
+    }
+
+    .btn-voice.recording {
+      background-color: #FFECEC;
+      border-color: #C75000;
+      color: #C75000;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
+    .voice-status {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Footer / Nav */
+    .footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      background: #FAFBFD;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .btn-secondary {
+      background-color: #E2E8F0;
+      color: var(--text);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #CBD5E1;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: #E06B00;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Summary Screen */
+    .summary-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .summary-title {
+      font-size: 1.2rem;
+      color: var(--secondary);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .summary-card {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .summary-prompt {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .summary-response {
+      font-size: 0.95rem;
+      color: var(--secondary);
+      font-weight: 600;
+      background: #FFFFFF;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #E2E8F0;
+      white-space: pre-wrap;
+    }
+
+    /* Discrete saved indicator */
+    .saved-tag {
+      font-size: 0.8rem;
+      color: var(--secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .saved-tag.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="widget-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="title" id="widget-title">Produção Guiada (Create)</div>
+      <div class="counter" id="item-counter">Item 1 de 6</div>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content" id="main-content">
+    <!-- Dynamic item view will be injected here -->
+  </div>
+
+  <!-- Footer Navigation -->
+  <div class="footer">
+    <button class="btn btn-secondary" id="btn-prev" onclick="prevItem()" disabled>Anterior</button>
+    <div class="saved-tag" id="saved-tag">✓ Registrado</div>
+    <button class="btn btn-primary" id="btn-next" onclick="nextItem()" disabled>Próximo</button>
+  </div>
+</div>
+
+<script>
+  const data = {
+    "prompt_source": "C",
+    "topic": "Closed Questions and Yes/no + subject + auxiliary Answers (do - did - will - would)",
+    "theme": "B. IMMIGRANT",
+    "cefr_level": "A1",
+    "accent": "en-GB",
+    "brand": "Teacher dos Famosos",
+    "module_id": "6_create",
+    "prompts": [
+      {
+        "type": "dialogue_completion",
+        "dialogue_context": "Você está conversando com a professora de Maria Luísa no final das aulas.",
+        "prompt": "A professora pergunta: 'Does Maria Luísa read her books at home?'. Escreva em inglês a sua resposta curta afirmativa e, em seguida, faça uma pergunta em inglês no passado perguntando se ela brincou hoje na escola (use 'Did she play...?')."
+      },
+      {
+        "type": "situational_writing",
+        "scenario": "Você precisa confirmar com o voluntário da igreja os eventos do final de semana.",
+        "prompt": "Escreva 2 perguntas diretas em inglês para o voluntário: 1) Uma pergunta no futuro usando 'Will' sobre o evento de domingo; 2) Uma pergunta educada usando 'Would you like...?' oferecendo ajuda na igreja."
+      },
+      {
+        "type": "roleplay_script",
+        "scenario": "Simulação de diálogo rápido com a recepcionista da escola britânica sobre o uniforme de Maria Luísa.",
+        "prompt": "Escreva um mini-diálogo em inglês de 2 turnos: A recepcionista faz uma pergunta no presente com 'Does...' sobre o casaco de Maria Luísa, e você responde com uma resposta curta negativa ('No, she...')."
+      },
+      {
+        "type": "roleplay_script",
+        "scenario": "Conversa na recepção da igreja local em um domingo de manhã.",
+        "prompt": "Escreva um mini-diálogo em inglês: Você pergunta a um membro se o culto vai começar às 10 (usando 'Will...'), e o membro responde afirmativamente com uma resposta curta em inglês ('Yes,...')."
+      },
+      {
+        "type": "voice_recording_prompt",
+        "scenario": "Gravador de voz para praticar pronúncia e fluência rápida para o contexto escolar.",
+        "prompt": "Grave um áudio em inglês dizendo claramente a pergunta e a resposta: 'Did Maria Luísa enjoy her day at school? Yes, she did.'"
+      },
+      {
+        "type": "voice_recording_prompt",
+        "scenario": "Gravador de voz para praticar perguntas corteses com membros da igreja comunitária.",
+        "prompt": "Grave um áudio em inglês fazendo uma pergunta cortês com 'Would' para um vizinho da igreja: 'Would you like to sit here?'"
+      }
+    ]
+  };
+
+  let currentIndex = 0;
+  const userAnswers = new Array(data.prompts.length).fill("");
+  let recognition = null;
+  let isRecording = false;
+
+  // Initialize Speech Recognition if available
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-GB';
+  }
+
+  function initWidget() {
+    renderItem();
+  }
+
+  function updateProgress() {
+    const total = data.prompts.length;
+    const completed = userAnswers.filter(a => a.trim().length > 0).length;
+    const percent = ((currentIndex + 1) / total) * 100;
+    
+    document.getElementById('item-counter').innerText = `Item ${currentIndex + 1} de ${total}`;
+    document.getElementById('progress-bar').style.width = `${percent}%`;
+  }
+
+  function renderItem() {
+    if (currentIndex >= data.prompts.length) {
+      renderSummary();
+      return;
+    }
+
+    updateProgress();
+
+    const item = data.prompts[currentIndex];
+    const mainContent = document.getElementById('main-content');
+    
+    // UI elements setup
+    document.getElementById('btn-prev').disabled = currentIndex === 0;
+    document.getElementById('btn-next').innerText = (currentIndex === data.prompts.length - 1) ? 'Finalizar' : 'Próximo';
+    
+    let scenarioHTML = '';
+    const contextText = item.dialogue_context || item.scenario;
+    if (contextText) {
+      scenarioHTML = `<div class="scenario-box">📌 <strong>Contexto:</strong> ${escapeHtml(contextText)}</div>`;
+    }
+
+    let voiceHTML = '';
+    if (item.type === 'voice_recording_prompt' || SpeechRecognition) {
+      voiceHTML = `
+        <div class="voice-controls">
+          <button type="button" class="btn-voice" id="btn-mic" onclick="toggleRecording()">
+            <span id="mic-icon">🎤</span> <span id="mic-text">Gravar Fala</span>
+          </button>
+          <span class="voice-status" id="voice-status">${SpeechRecognition ? 'Clique para gravar ou digite abaixo' : 'Digite sua resposta abaixo'}</span>
+        </div>
+      `;
+    }
+
+    mainContent.innerHTML = `
+      ${scenarioHTML}
+      <div class="prompt-text">${escapeHtml(item.prompt)}</div>
+      <div class="input-group">
+        ${voiceHTML}
+        <textarea 
+          id="user-input" 
+          placeholder="Escreva sua resposta em inglês aqui..." 
+          oninput="handleInput(this.value)"
+        >${escapeHtml(userAnswers[currentIndex])}</textarea>
+      </div>
+    `;
+
+    // Enable/disable next button based on existing answer
+    handleInput(userAnswers[currentIndex]);
+  }
+
+  function handleInput(val) {
+    userAnswers[currentIndex] = val;
+    const btnNext = document.getElementById('btn-next');
+    btnNext.disabled = val.trim().length === 0;
+    
+    const savedTag = document.getElementById('saved-tag');
+    if (val.trim().length > 0) {
+      savedTag.classList.add('visible');
+    } else {
+      savedTag.classList.remove('visible');
+    }
+  }
+
+  function toggleRecording() {
+    if (!recognition) {
+      alert("O seu navegador não suporta reconhecimento de voz direto. Por favor, digite sua resposta no campo de texto.");
+      return;
+    }
+
+    const btnMic = document.getElementById('btn-mic');
+    const micText = document.getElementById('mic-text');
+    const statusText = document.getElementById('voice-status');
+
+    if (isRecording) {
+      recognition.stop();
+      return;
+    }
+
+    try {
+      recognition.start();
+      isRecording = true;
+      btnMic.classList.add('recording');
+      micText.innerText = "Ouvindo...";
+      statusText.innerText = "Fale agora em inglês...";
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        const textarea = document.getElementById('user-input');
+        textarea.value = transcript;
+        handleInput(transcript);
+        stopRecordingState();
+      };
+
+      recognition.onerror = (event) => {
+        console.error(event.error);
+        statusText.innerText = "Erro ao capturar áudio. Tente novamente ou digite.";
+        stopRecordingState();
+      };
+
+      recognition.onend = () => {
+        stopRecordingState();
+      };
+
+    } catch (e) {
+      console.error(e);
+      stopRecordingState();
+    }
+  }
+
+  function stopRecordingState() {
+    isRecording = false;
+    const btnMic = document.getElementById('btn-mic');
+    const micText = document.getElementById('mic-text');
+    const statusText = document.getElementById('voice-status');
+
+    if (btnMic) btnMic.classList.remove('recording');
+    if (micText) micText.innerText = "Gravar Fala";
+    if (statusText) statusText.innerText = "Gravação concluída.";
+  }
+
+  function nextItem() {
+    if (currentIndex < data.prompts.length - 1) {
+      currentIndex++;
+      renderItem();
+    } else {
+      renderSummary();
+    }
+  }
+
+  function prevItem() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderItem();
+    }
+  }
+
+  function renderSummary() {
+    document.getElementById('item-counter').innerText = "Concluído";
+    document.getElementById('progress-bar').style.width = "100%";
+    
+    document.getElementById('btn-prev').style.display = 'none';
+    document.getElementById('btn-next').style.display = 'none';
+    document.getElementById('saved-tag').style.display = 'none';
+
+    const mainContent = document.getElementById('main-content');
+    const total = data.prompts.length;
+
+    let itemsSummaryHTML = data.prompts.map((item, index) => {
+      const response = userAnswers[index] || "<em>Nenhuma resposta registrada.</em>";
+      return `
+        <div class="summary-card">
+          <div class="summary-prompt">Item ${index + 1}: ${escapeHtml(item.prompt)}</div>
+          <div class="summary-response">${escapeHtml(response)}</div>
+        </div>
+      `;
+    }).join('');
+
+    mainContent.innerHTML = `
+      <div class="summary-container">
+        <div class="summary-title">🎉 Resumo das suas Produções</div>
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 8px;">
+          Você concluiu ${total} de ${total} produções propostas. Revise suas respostas abaixo:
+        </p>
+        ${itemsSummaryHTML}
+      </div>
+    `;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // Initialize on load
+  window.onload = initWidget;
+</script>
+
+</body>
+</html>
