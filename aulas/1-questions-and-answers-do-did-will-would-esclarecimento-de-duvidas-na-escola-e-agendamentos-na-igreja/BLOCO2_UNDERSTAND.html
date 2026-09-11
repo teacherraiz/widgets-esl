@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Módulo 2: Understand</title>
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --primary-dark: #E06B00;
+      --secondary: #1E5AA8;
+      --secondary-light: #E8F1FC;
+      --bg: #FFF8F0;
+      --card-bg: #FFFFFF;
+      --text: #222222;
+      --text-muted: #666666;
+      --correct: #1E5AA8;
+      --correct-bg: #E8F1FC;
+      --incorrect: #C75000;
+      --incorrect-bg: #FDF0E6;
+      --border: #E2E8F0;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .widget-container {
+      width: 100%;
+      max-width: 768px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      padding: 20px 24px 12px 24px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      background: var(--secondary-light);
+      color: var(--secondary);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .score-counter {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--secondary);
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #EAEAEA;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Content Area */
+    .main-content {
+      padding: 24px;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .item-title {
+      font-size: 1.1rem;
+      color: var(--secondary);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    /* Generic Interactive Controls */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--secondary);
+      border: 2px solid var(--secondary);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--secondary-light);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .audio-btn {
+      background: var(--secondary-light);
+      color: var(--secondary);
+      border: 1px solid var(--secondary);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.1s ease, background-color 0.2s;
+    }
+
+    .audio-btn:hover {
+      transform: scale(1.05);
+      background: #D5E4F7;
+    }
+
+    .audio-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    /* Matching Layout */
+    .matching-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .matching-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .match-column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .match-card {
+      background: #FAFAFA;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .match-card:hover:not(.locked) {
+      border-color: var(--secondary);
+      background: #FFFFFF;
+    }
+
+    .match-card.selected {
+      border-color: var(--primary);
+      background: #FFF3E8;
+    }
+
+    .match-card.paired {
+      border-color: var(--secondary);
+      background: var(--secondary-light);
+    }
+
+    .match-card.correct {
+      border-color: var(--correct) !important;
+      background: var(--correct-bg) !important;
+      color: var(--correct);
+      font-weight: 600;
+    }
+
+    .match-card.incorrect {
+      border-color: var(--incorrect) !important;
+      background: var(--incorrect-bg) !important;
+      color: var(--incorrect);
+    }
+
+    .pair-badge {
+      background: var(--secondary);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border-radius: 12px;
+      padding: 2px 8px;
+      margin-left: 8px;
+    }
+
+    /* Categorization Layout */
+    .categorization-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cat-item-card {
+      background: #FAFAFA;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .cat-item-text {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .cat-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cat-pill {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cat-pill:hover:not(.locked) {
+      border-color: var(--secondary);
+      color: var(--secondary);
+    }
+
+    .cat-pill.selected {
+      background: var(--secondary);
+      color: #FFFFFF;
+      border-color: var(--secondary);
+    }
+
+    .cat-item-card.correct {
+      border: 2px solid var(--correct);
+      background: var(--correct-bg);
+    }
+
+    .cat-item-card.incorrect {
+      border: 2px solid var(--incorrect);
+      background: var(--incorrect-bg);
+    }
+
+    /* Sequencing Layout */
+    .sequencing-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .seq-item {
+      background: #FFFFFF;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .seq-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-seq {
+      background: var(--secondary-light);
+      color: var(--secondary);
+      border: none;
+      border-radius: 4px;
+      width: 32px;
+      height: 32px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-seq:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    .seq-item.correct {
+      border-color: var(--correct);
+      background: var(--correct-bg);
+    }
+
+    .seq-item.incorrect {
+      border-color: var(--incorrect);
+      background: var(--incorrect-bg);
+    }
+
+    /* Odd One Out Layout */
+    .odd-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .odd-card {
+      background: #FFFFFF;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .odd-card:hover:not(.locked) {
+      border-color: var(--secondary);
+      background: var(--secondary-light);
+    }
+
+    .odd-card.selected {
+      border-color: var(--primary);
+      background: #FFF3E8;
+    }
+
+    .odd-card.correct {
+      border-color: var(--correct) !important;
+      background: var(--correct-bg) !important;
+      color: var(--correct);
+    }
+
+    .odd-card.incorrect {
+      border-color: var(--incorrect) !important;
+      background: var(--incorrect-bg) !important;
+      color: var(--incorrect);
+    }
+
+    /* Feedback Box */
+    .feedback-box {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .feedback-box.correct {
+      display: block;
+      background: var(--correct-bg);
+      border: 1px solid var(--correct);
+      color: var(--correct);
+    }
+
+    .feedback-box.incorrect {
+      display: block;
+      background: var(--incorrect-bg);
+      border: 1px solid var(--incorrect);
+      color: var(--incorrect);
+    }
+
+    /* Footer */
+    .footer {
+      padding: 16px 24px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-right {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Summary Screen */
+    .summary-container {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .summary-title {
+      font-size: 1.5rem;
+      color: var(--secondary);
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .summary-score {
+      font-size: 2.5rem;
+      color: var(--primary);
+      font-weight: 800;
+      margin: 16px 0;
+    }
+
+    .summary-text {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      font-size: 1rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="widget-container">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <span class="badge" id="item-counter">Item 1 de 16</span>
+      <span class="score-counter" id="score-counter">0 de 16 corretas</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-bar"></div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content" id="main-content">
+    <!-- Dynamic item rendered here -->
+  </main>
+
+  <!-- Footer Navigation -->
+  <footer class="footer">
+    <button class="btn btn-secondary" id="btn-prev" onclick="handlePrev()">Anterior</button>
+    <div class="footer-right">
+      <button class="btn btn-primary" id="btn-submit" onclick="handleSubmit()">Verificar</button>
+      <button class="btn btn-primary" id="btn-next" onclick="handleNext()" disabled>Próximo</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // JSON Data Input
+  const moduleData = {"prompt_source": "C", "topic": "Closed Questions and Yes/no + subject + auxiliary Answers (do - did - will - would)", "theme": "B. IMMIGRANT", "cefr_level": "A1", "accent": "en-GB", "brand": "Teacher dos Famosos", "module_id": "2_understand", "audio_ratio_target": 0.4, "items": [{"type": "audio_matching", "pairs": [{"audio_text": "Does Maria Luísa play football?", "right": "Yes, she does."}, {"audio_text": "Did she lose her coat yesterday?", "right": "No, she didn't."}, {"audio_text": "Will you go to church on Sunday?", "right": "Yes, I will."}], "feedback_correct": "Excelente! Você associou cada pergunta ao seu tempo verbal correspondente.", "feedback_incorrect": "Preste atenção no verbo auxiliar usado no áudio para escolher a resposta certa."}, {"type": "audio_matching", "pairs": [{"audio_text": "Would you like some tea at the church hall?", "right": "Yes, I would."}, {"audio_text": "Do you live near the school?", "right": "Yes, I do."}, {"audio_text": "Will the school open tomorrow?", "right": "No, it won't."}], "feedback_correct": "Muito bem! Suas combinações de perguntas e respostas estão perfeitas.", "feedback_incorrect": "Lembre-se de alinhar o auxiliar da pergunta (Would, Do, Will) na resposta."}, {"type": "text_matching", "pairs": [{"left": "Does she need a new school book?", "right": "Yes, she does."}, {"left": "Did the choir sing on Sunday?", "right": "Yes, they did."}, {"left": "Would you join the church group?", "right": "Yes, I would."}], "feedback_correct": "Ótima associação de perguntas e respostas!", "feedback_incorrect": "Verifique o tempo verbal de cada pergunta antes de conectar."}, {"type": "text_matching", "pairs": [{"left": "Do you have the church timetable?", "right": "Yes, I do."}, {"left": "Will Maria Luísa wear her uniform tomorrow?", "right": "Yes, she will."}, {"left": "Did you speak to the headteacher?", "right": "No, I didn't."}], "feedback_correct": "Parabéns! Entendimento afiado das respostas curtas.", "feedback_incorrect": "Relacione o auxiliar do início da frase com o auxiliar do fim da resposta."}, {"type": "categorization", "categories": ["Presente (Do/Does)", "Passado (Did)", "Futuro/Cortesia (Will/Would)"], "items": [{"text": "Does Maria Luísa like her school?", "correct_category": "Presente (Do/Does)"}, {"text": "Did you visit the church last Sunday?", "correct_category": "Passado (Did)"}, {"text": "Will you come to the event?", "correct_category": "Futuro/Cortesia (Will/Would)"}, {"text": "Would you like water?", "correct_category": "Futuro/Cortesia (Will/Would)"}], "feedback_correct": "Ótimo! Você categorizou corretamente os tempos e intenções dos auxiliares.", "feedback_incorrect": "Observe as palavras-chave: Do/Does = presente, Did = passado, Will/Would = futuro/cortesia."}, {"type": "categorization", "categories": ["Resposta Afirmativa", "Resposta Negativa"], "items": [{"text": "Yes, she does.", "correct_category": "Resposta Afirmativa"}, {"text": "No, I didn't.", "correct_category": "Resposta Negativa"}, {"text": "Yes, they will.", "correct_category": "Resposta Afirmativa"}, {"text": "No, she wouldn't.", "correct_category": "Resposta Negativa"}], "feedback_correct": "Excelente! Identificação clara de afirmação e negação.", "feedback_incorrect": "Respostas com 'Yes' são afirmativas; com 'No' e 'not/n't' são negativas."}, {"type": "categorization", "categories": ["Rotina Escolar", "Eventos da Igreja"], "items": [{"text": "Does Maria Luísa have homework today?", "correct_category": "Rotina Escolar"}, {"text": "Will the Sunday service start at 10?", "correct_category": "Eventos da Igreja"}, {"text": "Did she pack her lunchbox?", "correct_category": "Rotina Escolar"}, {"text": "Would you join the church choir?", "correct_category": "Eventos da Igreja"}], "feedback_correct": "Muito bem! Contextos separados corretamente.", "feedback_incorrect": "Separe as frases de acordo com o contexto: ambiente escolar ou comunitário/igreja."}, {"type": "sequencing", "items_shuffled": ["does.", "Yes,", "she"], "correct_order": [1, 2, 0], "feedback_correct": "Correto! 'Yes, she does.'", "feedback_incorrect": "A ordem de uma resposta curta afirmativa é: Yes + Pronome + Auxiliar."}, {"type": "sequencing", "items_shuffled": ["you", "Will", "the pastor?", "meet"], "correct_order": [1, 0, 3, 2], "feedback_correct": "Perfeito! 'Will you meet the pastor?'", "feedback_incorrect": "Estrutura da pergunta: Auxiliar + Sujeito + Verbo + Complemento."}, {"type": "sequencing", "items_shuffled": ["didn't.", "No,", "I"], "correct_order": [1, 2, 0], "feedback_correct": "Excelente! 'No, I didn't.'", "feedback_incorrect": "A ordem da resposta negativa curta é: No + Pronome + Auxiliar Negativo."}, {"type": "odd_one_out", "options": ["Yes, she does.", "Yes, she did.", "Yes, she is."], "correct_index": 2, "explanation": "'Yes, she is' usa o verbo To Be, enquanto as outras usam auxiliares de ação (do/did)."}, {"type": "odd_one_out", "options": ["Does you go?", "Do you go?", "Did you go?"], "correct_index": 0, "explanation": "'Does you go?' está incorreto porque o auxiliar 'Does' só se usa com he/she/it, não com 'you'."}, {"type": "text_matching", "pairs": [{"left": "Will she play?", "right": "Futuro"}, {"left": "Did she play?", "right": "Passado"}, {"left": "Does she play?", "right": "Presente"}], "feedback_correct": "Perfeito! Mapeamento de tempos verbais totalmente correto.", "feedback_incorrect": "Will = Futuro, Did = Passado, Does = Presente."}, {"type": "audio_matching", "pairs": [{"audio_text": "Did Maria Luísa eat her apple?", "right": "Passado"}, {"audio_text": "Does Maria Luísa read books?", "right": "Presente"}, {"audio_text": "Will Maria Luísa study tomorrow?", "right": "Futuro"}], "feedback_correct": "Ótimo ouvido para reconhecer o tempo das perguntas faladas!", "feedback_incorrect": "Escute o auxiliar inicial para determinar se é passado (did), presente (does) ou futuro (will)."}, {"type": "audio_matching", "pairs": [{"audio_text": "Would you like coffee?", "right": "Pedido/Convite cortês"}, {"audio_text": "Do you need help?", "right": "Pergunta sobre o presente"}, {"audio_text": "Did you arrive early?", "right": "Pergunta sobre o passado"}], "feedback_correct": "Excelente! Identificou a intenção comunicativa de cada frase.", "feedback_incorrect": "Ouça com atenção: 'Would' indica gentileza/convite."}, {"type": "odd_one_out", "options": ["Will you help?", "Would you help?", "Are you help?"], "correct_index": 2, "explanation": "'Are you help?' é uma estrutura gramaticalmente incorreta para fazer um pedido de ação."}]};
+
+  // State Management
+  let currentIndex = 0;
+  const totalItems = moduleData.items.length;
+  const userStates = [];
+
+  // Helper: Web Speech API Audio Player
+  function playAudio(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    const targetAccent = moduleData.accent || 'en-GB';
+    
+    let voices = window.speechSynthesis.getVoices();
+    let voice = voices.find(v => v.lang.toLowerCase().startsWith(targetAccent.toLowerCase()));
+    
+    if (!voice) {
+      voice = voices.find(v => v.lang.toLowerCase().startsWith('en'));
+    }
+    
+    if (voice) {
+      utterance.voice = voice;
+    }
+    utterance.lang = targetAccent;
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Ensure voices are loaded
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.getVoices();
+    };
+  }
+
+  // Utility: Fisher-Yates Shuffle
+  function shuffleArray(arr) {
+    const array = [...arr];
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  // Initialize User State Storage
+  function initState() {
+    moduleData.items.forEach((item, idx) => {
+      let itemState = {
+        answered: false,
+        isCorrect: false,
+        userSelection: null
+      };
+
+      if (item.type === 'audio_matching' || item.type === 'text_matching') {
+        const rightShuffled = shuffleArray(item.pairs.map((p, pIdx) => ({ text: p.right, origIndex: pIdx })));
+        itemState.shuffledRight = rightShuffled;
+        itemState.userSelection = {}; // leftIndex -> rightShuffledIndex
+        itemState.selectedLeft = null;
+      } else if (item.type === 'categorization') {
+        itemState.userSelection = {}; // itemIndex -> categoryString
+      } else if (item.type === 'sequencing') {
+        itemState.currentOrder = [...item.items_shuffled];
+      } else if (item.type === 'odd_one_out') {
+        itemState.selectedIndex = null;
+      }
+
+      userStates.push(itemState);
+    });
+  }
+
+  // DOM Elements
+  const mainContent = document.getElementById('main-content');
+  const itemCounter = document.getElementById('item-counter');
+  const scoreCounter = document.getElementById('score-counter');
+  const progressBar = document.getElementById('progress-bar');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const btnSubmit = document.getElementById('btn-submit');
+
+  function updateHeader() {
+    itemCounter.innerText = `Item ${currentIndex + 1} de ${totalItems}`;
+    const correctCount = userStates.filter(s => s.answered && s.isCorrect).length;
+    scoreCounter.innerText = `${correctCount} de ${totalItems} corretas`;
+    const progressPercent = ((currentIndex + 1) / totalItems) * 100;
+    progressBar.style.width = `${progressPercent}%`;
+  }
+
+  function renderCurrentItem() {
+    updateHeader();
+    const item = moduleData.items[currentIndex];
+    const state = userStates[currentIndex];
+
+    // Navigation Buttons Logic
+    btnPrev.disabled = currentIndex === 0;
+    
+    if (state.answered) {
+      btnSubmit.classList.add('hidden');
+      btnNext.disabled = false;
+      if (currentIndex === totalItems - 1) {
+        btnNext.innerText = 'Finalizar';
+      } else {
+        btnNext.innerText = 'Próximo';
+      }
+    } else {
+      btnNext.disabled = true;
+      if (item.type === 'odd_one_out') {
+        btnSubmit.classList.add('hidden');
+      } else {
+        btnSubmit.classList.remove('hidden');
+      }
+    }
+
+    mainContent.innerHTML = '';
+
+    if (item.type === 'audio_matching' || item.type === 'text_matching') {
+      renderMatching(item, state);
+    } else if (item.type === 'categorization') {
+      renderCategorization(item, state);
+    } else if (item.type === 'sequencing') {
+      renderSequencing(item, state);
+    } else if (item.type === 'odd_one_out') {
+      renderOddOneOut(item, state);
+    }
+  }
+
+  /* ---------------- MATCHING ---------------- */
+  function renderMatching(item, state) {
+    const isAudio = item.type === 'audio_matching';
+    
+    let html = `<div class="item-title">${isAudio ? 'Ouça e associe cada áudio à opção correta:' : 'Associe os pares correspondentes:'}</div>`;
+    html += `<div class="matching-grid">
+      <div class="match-column" id="left-col"></div>
+      <div class="match-column" id="right-col"></div>
+    </div>`;
+    html += `<div id="feedback-container"></div>`;
+
+    mainContent.innerHTML = html;
+
+    const leftCol = document.getElementById('left-col');
+    const rightCol = document.getElementById('right-col');
+
+    // Left Items
+    item.pairs.forEach((pair, lIdx) => {
+      const card = document.createElement('div');
+      card.className = `match-card ${state.answered ? 'locked' : ''}`;
+      if (state.selectedLeft === lIdx) card.classList.add('selected');
+      if (state.userSelection[lIdx] !== undefined) card.classList.add('paired');
+
+      if (state.answered) {
+        const chosenRightObj = state.shuffledRight[state.userSelection[lIdx]];
+        const isPairCorrect = chosenRightObj && chosenRightObj.text === pair.right;
+        card.classList.add(isPairCorrect ? 'correct' : 'incorrect');
+      }
+
+      let contentHtml = '';
+      if (isAudio) {
+        contentHtml = `
+          <button class="audio-btn" onclick="event.stopPropagation(); playAudio('${pair.audio_text.replace(/'/g, "\\'")}')">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+          <span>Áudio #${lIdx + 1}</span>
+        `;
+      } else {
+        contentHtml = `<span>${pair.left}</span>`;
+      }
+
+      if (state.userSelection[lIdx] !== undefined) {
+        contentHtml += `<span class="pair-badge">Par ${state.userSelection[lIdx] + 1}</span>`;
+      }
+
+      card.innerHTML = contentHtml;
+      card.onclick = () => {
+        if (state.answered) return;
+        state.selectedLeft = lIdx;
+        renderCurrentItem();
+      };
+      leftCol.appendChild(card);
+    });
+
+    // Right Items
+    state.shuffledRight.forEach((rObj, rIdx) => {
+      const card = document.createElement('div');
+      card.className = `match-card ${state.answered ? 'locked' : ''}`;
+
+      // Check if paired with selected left or any left
+      const pairedLeftIdx = Object.keys(state.userSelection).find(k => state.userSelection[k] === rIdx);
+      if (pairedLeftIdx !== undefined) card.classList.add('paired');
+
+      if (state.answered && pairedLeftIdx !== undefined) {
+        const correctRightText = item.pairs[pairedLeftIdx].right;
+        const isPairCorrect = rObj.text === correctRightText;
+        card.classList.add(isPairCorrect ? 'correct' : 'incorrect');
+      }
+
+      let contentHtml = `<span>${rObj.text}</span>`;
+      if (pairedLeftIdx !== undefined) {
+        contentHtml += `<span class="pair-badge">Par ${rIdx + 1}</span>`;
+      }
+
+      card.innerHTML = contentHtml;
+      card.onclick = () => {
+        if (state.answered) return;
+        if (state.selectedLeft !== null && state.selectedLeft !== undefined) {
+          state.userSelection[state.selectedLeft] = rIdx;
+          state.selectedLeft = null;
+          renderCurrentItem();
+        }
+      };
+      rightCol.appendChild(card);
+    });
+
+    if (state.answered) {
+      renderFeedback(state.isCorrect, item.feedback_correct, item.feedback_incorrect);
+    }
+  }
+
+  /* ---------------- CATEGORIZATION ---------------- */
+  function renderCategorization(item, state) {
+    let html = `<div class="item-title">Classifique cada item na categoria correta:</div>`;
+    html += `<div class="categorization-container">`;
+
+    item.items.forEach((cItem, iIdx) => {
+      const selectedCat = state.userSelection[iIdx];
+      let cardClass = 'cat-item-card';
+
+      if (state.answered) {
+        const isItemCorrect = selectedCat === cItem.correct_category;
+        cardClass += isItemCorrect ? ' correct' : ' incorrect';
+      }
+
+      html += `<div class="${cardClass}">
+        <div class="cat-item-text">${cItem.text}</div>
+        <div class="cat-options">`;
+
+      item.categories.forEach(cat => {
+        const isSelected = selectedCat === cat;
+        html += `<button class="cat-pill ${isSelected ? 'selected' : ''} ${state.answered ? 'locked' : ''}" 
+                  onclick="selectCategory(${iIdx}, '${cat.replace(/'/g, "\\'")}')">
+                  ${cat}
+                </button>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    html += `</div><div id="feedback-container"></div>`;
+    mainContent.innerHTML = html;
+
+    if (state.answered) {
+      renderFeedback(state.isCorrect, item.feedback_correct, item.feedback_incorrect);
+    }
+  }
+
+  function selectCategory(itemIdx, category) {
+    const state = userStates[currentIndex];
+    if (state.answered) return;
+    state.userSelection[itemIdx] = category;
+    renderCurrentItem();
+  }
+
+  /* ---------------- SEQUENCING ---------------- */
+  function renderSequencing(item, state) {
+    let html = `<div class="item-title">Organize os elementos na ordem correta:</div>`;
+    html += `<div class="sequencing-list">`;
+
+    state.currentOrder.forEach((seqText, sIdx) => {
+      let itemClass = 'seq-item';
+      if (state.answered) {
+        // Compare with correct order
+        const targetTextAtIdx = item.items_shuffled[item.correct_order[sIdx]];
+        const isPosCorrect = seqText === targetTextAtIdx;
+        itemClass += isPosCorrect ? ' correct' : ' incorrect';
+      }
+
+      html += `<div class="${itemClass}">
+        <span>${seqText}</span>
+        ${!state.answered ? `
+          <div class="seq-controls">
+            <button class="btn-seq" onclick="moveSequence(${sIdx}, -1)" ${sIdx === 0 ? 'disabled' : ''}>▲</button>
+            <button class="btn-seq" onclick="moveSequence(${sIdx}, 1)" ${sIdx === state.currentOrder.length - 1 ? 'disabled' : ''}>▼</button>
+          </div>
+        ` : ''}
+      </div>`;
+    });
+
+    html += `</div><div id="feedback-container"></div>`;
+    mainContent.innerHTML = html;
+
+    if (state.answered) {
+      renderFeedback(state.isCorrect, item.feedback_correct, item.feedback_incorrect);
+    }
+  }
+
+  function moveSequence(index, direction) {
+    const state = userStates[currentIndex];
+    if (state.answered) return;
+    const newIdx = index + direction;
+    if (newIdx < 0 || newIdx >= state.currentOrder.length) return;
+
+    const temp = state.currentOrder[index];
+    state.currentOrder[index] = state.currentOrder[newIdx];
+    state.currentOrder[newIdx] = temp;
+    renderCurrentItem();
+  }
+
+  /* ---------------- ODD ONE OUT ---------------- */
+  function renderOddOneOut(item, state) {
+    let html = `<div class="item-title">Selecione a opção incorreta ou que NÃO pertence ao grupo:</div>`;
+    html += `<div class="odd-options">`;
+
+    item.options.forEach((opt, oIdx) => {
+      let cardClass = 'odd-card';
+      if (state.selectedIndex === oIdx) cardClass += ' selected';
+
+      if (state.answered) {
+        if (oIdx === item.correct_index) {
+          cardClass += ' correct';
+        } else if (state.selectedIndex === oIdx) {
+          cardClass += ' incorrect';
+        }
+        cardClass += ' locked';
+      }
+
+      html += `<div class="${cardClass}" onclick="selectOddOption(${oIdx})">${opt}</div>`;
+    });
+
+    html += `</div><div id="feedback-container"></div>`;
+    mainContent.innerHTML = html;
+
+    if (state.answered) {
+      renderFeedback(state.isCorrect, item.explanation, item.explanation);
+    }
+  }
+
+  function selectOddOption(oIdx) {
+    const state = userStates[currentIndex];
+    if (state.answered) return;
+    state.selectedIndex = oIdx;
+    
+    // Auto-evaluate odd one out on click
+    const item = moduleData.items[currentIndex];
+    state.isCorrect = (oIdx === item.correct_index);
+    state.answered = true;
+    renderCurrentItem();
+  }
+
+  /* ---------------- FEEDBACK DISPLAY ---------------- */
+  function renderFeedback(isCorrect, msgCorrect, msgIncorrect) {
+    const container = document.getElementById('feedback-container');
+    if (!container) return;
+
+    const fbBox = document.createElement('div');
+    fbBox.className = `feedback-box ${isCorrect ? 'correct' : 'incorrect'}`;
+    fbBox.innerHTML = `<strong>${isCorrect ? 'Resposta Correta!' : 'Atenção:'}</strong><br>${isCorrect ? msgCorrect : msgIncorrect}`;
+    container.appendChild(fbBox);
+  }
+
+  /* ---------------- ACTION HANDLERS ---------------- */
+  function handleSubmit() {
+    const item = moduleData.items[currentIndex];
+    const state = userStates[currentIndex];
+    if (state.answered) return;
+
+    if (item.type === 'audio_matching' || item.type === 'text_matching') {
+      if (Object.keys(state.userSelection).length < item.pairs.length) {
+        alert('Por favor, associe todos os pares antes de verificar.');
+        return;
+      }
+      let allCorrect = true;
+      item.pairs.forEach((pair, lIdx) => {
+        const chosenRightObj = state.shuffledRight[state.userSelection[lIdx]];
+        if (!chosenRightObj || chosenRightObj.text !== pair.right) {
+          allCorrect = false;
+        }
+      });
+      state.isCorrect = allCorrect;
+      state.answered = true;
+
+    } else if (item.type === 'categorization') {
+      if (Object.keys(state.userSelection).length < item.items.length) {
+        alert('Por favor, classifique todos os itens antes de verificar.');
+        return;
+      }
+      let allCorrect = true;
+      item.items.forEach((cItem, iIdx) => {
+        if (state.userSelection[iIdx] !== cItem.correct_category) {
+          allCorrect = false;
+        }
+      });
+      state.isCorrect = allCorrect;
+      state.answered = true;
+
+    } else if (item.type === 'sequencing') {
+      let allCorrect = true;
+      state.currentOrder.forEach((seqText, sIdx) => {
+        const targetText = item.items_shuffled[item.correct_order[sIdx]];
+        if (seqText !== targetText) {
+          allCorrect = false;
+        }
+      });
+      state.isCorrect = allCorrect;
+      state.answered = true;
+    }
+
+    renderCurrentItem();
+  }
+
+  function handlePrev() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderCurrentItem();
+    }
+  }
+
+  function handleNext() {
+    if (currentIndex < totalItems - 1) {
+      currentIndex++;
+      renderCurrentItem();
+    } else {
+      renderSummary();
+    }
+  }
+
+  /* ---------------- SUMMARY SCREEN ---------------- */
+  function renderSummary() {
+    itemCounter.innerText = `Finalizado`;
+    progressBar.style.width = `100%`;
+    btnPrev.classList.add('hidden');
+    btnSubmit.classList.add('hidden');
+    btnNext.classList.add('hidden');
+
+    const totalCorrect = userStates.filter(s => s.isCorrect).length;
+    scoreCounter.innerText = `${totalCorrect} de ${totalItems} corretas`;
+
+    mainContent.innerHTML = `
+      <div class="summary-container">
+        <div class="summary-title">Módulo Concluído!</div>
+        <div class="summary-text">Você completou o módulo de entendimento de perguntas e respostas curtas.</div>
+        <div class="summary-score">${totalCorrect} / ${totalItems}</div>
+        <div class="summary-text">Respostas corretas</div>
+        <button class="btn btn-primary" onclick="restartReview()">Revisar Exercícios</button>
+      </div>
+    `;
+  }
+
+  function restartReview() {
+    currentIndex = 0;
+    btnPrev.classList.remove('hidden');
+    btnNext.classList.remove('hidden');
+    renderCurrentItem();
+  }
+
+  // Start Application
+  initState();
+  renderCurrentItem();
+</script>
+</body>
+</html>
