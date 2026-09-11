@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloco 4: Analyze - Interactive Widget</title>
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --secondary: #1E5AA8;
+      --bg: #FFF8F0;
+      --card-bg: #FFFFFF;
+      --text-dark: #2C3E50;
+      --text-muted: #666666;
+      --correct-bg: #E8F1FA;
+      --correct-border: #1E5AA8;
+      --correct-text: #1E5AA8;
+      --incorrect-bg: #FFF0E6;
+      --incorrect-border: #C75000;
+      --incorrect-text: #C75000;
+      --border-color: #E2E8F0;
+      --radius: 12px;
+      --transition: all 0.25s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .widget-container {
+      width: 100%;
+      max-width: 760px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER & PROGRESS */
+    .header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: #FFFFFF;
+    }
+
+    .top-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .item-counter {
+      color: var(--secondary);
+      background: #E8F1FA;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .score-counter {
+      color: var(--secondary);
+      font-weight: 700;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background-color: #E2E8F0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* CONTENT AREA */
+    .content-area {
+      padding: 24px;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .task-title {
+      font-size: 1.1rem;
+      color: var(--secondary);
+      margin-bottom: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* AUDIO BUTTON */
+    .audio-btn {
+      background-color: #E8F1FA;
+      color: var(--secondary);
+      border: 2px solid var(--secondary);
+      padding: 10px 18px;
+      border-radius: 24px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      transition: var(--transition);
+    }
+
+    .audio-btn:hover {
+      background-color: var(--secondary);
+      color: #FFFFFF;
+    }
+
+    .audio-btn svg {
+      fill: currentColor;
+      width: 18px;
+      height: 18px;
+    }
+
+    /* COMPARISON / CONTRAST BOXES */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .compare-card {
+      background: var(--bg);
+      border: 1px solid #F0D0B5;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .compare-card label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* OPTIONS LIST */
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .option-btn {
+      background: #FFFFFF;
+      border: 2px solid var(--border-color);
+      padding: 14px 18px;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: var(--text-dark);
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background-color: #FFF8F0;
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+    }
+
+    .option-btn.selected-correct {
+      background-color: var(--correct-bg);
+      border-color: var(--correct-border);
+      color: var(--correct-text);
+      font-weight: 700;
+    }
+
+    .option-btn.selected-incorrect {
+      background-color: var(--incorrect-bg);
+      border-color: var(--incorrect-border);
+      color: var(--incorrect-text);
+      font-weight: 700;
+    }
+
+    /* TEXT INPUT FORM */
+    .text-input-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .text-input-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .free-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .free-input:focus {
+      border-color: var(--secondary);
+    }
+
+    .submit-text-btn {
+      align-self: flex-start;
+      background: var(--secondary);
+      color: #FFFFFF;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .submit-text-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* FEEDBACK BOX */
+    .feedback-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      display: none;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .feedback-box.correct {
+      display: block;
+      background-color: var(--correct-bg);
+      border: 1px solid var(--correct-border);
+      color: var(--correct-text);
+    }
+
+    .feedback-box.incorrect {
+      display: block;
+      background-color: var(--incorrect-bg);
+      border: 1px solid var(--incorrect-border);
+      color: var(--incorrect-text);
+    }
+
+    .feedback-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* FOOTER / NAVIGATION */
+    .footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      background: #FFFFFF;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition);
+    }
+
+    .prev-btn {
+      background: #E2E8F0;
+      color: var(--text-dark);
+    }
+
+    .prev-btn:hover:not(:disabled) {
+      background: #CBD5E1;
+    }
+
+    .next-btn {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+
+    .next-btn:hover:not(:disabled) {
+      background: #E66E00;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* FINAL SUMMARY SCREEN */
+    .summary-container {
+      text-align: center;
+      padding: 32px 16px;
+    }
+
+    .summary-title {
+      font-size: 1.6rem;
+      color: var(--secondary);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .summary-score {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .summary-text {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .restart-btn {
+      background: var(--secondary);
+      color: #FFFFFF;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 24px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .restart-btn:hover {
+      opacity: 0.9;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="widget-container" id="widgetContainer">
+  <!-- Header -->
+  <div class="header">
+    <div class="top-meta">
+      <span class="item-counter" id="itemCounter">Item 1 de 10</span>
+      <span class="score-counter" id="scoreCounter">Acertos: 0 de 10</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content-area" id="contentArea">
+    <!-- Dynamic item content injected here -->
+  </div>
+
+  <!-- Footer -->
+  <div class="footer" id="footerArea">
+    <button class="nav-btn prev-btn" id="prevBtn" onclick="handlePrev()">Anterior</button>
+    <button class="nav-btn next-btn" id="nextBtn" onclick="handleNext()" disabled>Próximo</button>
+  </div>
+</div>
+
+<script>
+  // JSON DATA EMBEDDED
+  const moduleData = {
+    "prompt_source": "C",
+    "topic": "Closed Questions and Yes/no + subject + auxiliary Answers (do - did - will - would)",
+    "theme": "B. IMMIGRANT",
+    "cefr_level": "A1",
+    "accent": "en-GB",
+    "brand": "Teacher dos Famosos",
+    "module_id": "4_analyze",
+    "audio_ratio_target": 0.2,
+    "items": [
+      {
+        "type": "audio_error_spotting",
+        "audio_text": "Does Maria Luísa likes her new school class?",
+        "sentence_options": [
+          "Does Maria Luísa like her new school class?",
+          "Does Maria Luísa likes her new school class?",
+          "Do Maria Luísa like her new school class?"
+        ],
+        "correct_index": 0,
+        "explanation": "No áudio dizia 'likes', mas quando usamos o auxiliar 'Does', o verbo principal deve ficar na forma base ('like'), sem o 's'."
+      },
+      {
+        "type": "audio_error_spotting",
+        "audio_text": "Did you went to the church event yesterday?",
+        "sentence_options": [
+          "Did you go to the church event yesterday?",
+          "Did you went to the church event yesterday?",
+          "Do you went to the church event yesterday?"
+        ],
+        "correct_index": 0,
+        "explanation": "No áudio dizia 'went'. Após o auxiliar 'Did', o verbo principal precisa voltar ao presente/forma base ('go')."
+      },
+      {
+        "type": "error_spotting",
+        "sentence_options": [
+          "Will she attend the school meeting tomorrow?",
+          "Will she attends the school meeting tomorrow?",
+          "Will she attended the school meeting tomorrow?"
+        ],
+        "correct_index": 0,
+        "explanation": "A opção 0 está correta. Após o auxiliar 'Will', o verbo principal fica na forma base simples ('attend')."
+      },
+      {
+        "type": "error_spotting",
+        "sentence_options": [
+          "Did you meet the pastor? Yes, I met.",
+          "Did you meet the pastor? Yes, I did.",
+          "Did you meet the pastor? Yes, I do."
+        ],
+        "correct_index": 1,
+        "explanation": "A opção 1 está correta. Em respostas curtas em inglês, não usamos o verbo principal sozinho ('Yes, I met'), mas sim o auxiliar da pergunta ('Yes, I did')."
+      },
+      {
+        "type": "compare_contrast",
+        "sentence_a": "Does Maria Luísa go to school?",
+        "sentence_b": "Did Maria Luísa go to school?",
+        "question": "Qual é a diferença de tempo verbal entre as duas perguntas?",
+        "correct_answer": "A frase A pergunta sobre rotina no presente, e a frase B pergunta sobre um fato no passado.",
+        "explanation": "'Does' indica presente/rotina habitualmente, enquanto 'Did' marca uma ação que ocorreu no passado."
+      },
+      {
+        "type": "compare_contrast",
+        "sentence_a": "Will you visit the church?",
+        "sentence_b": "Would you visit the church?",
+        "question": "Qual das duas frases expressa um convite ou pedido mais cortês/educado?",
+        "correct_answer": "A frase B, pois 'Would' é mais suave e polido que 'Will'.",
+        "explanation": "'Would' traz um tom de gentileza e cortesia, ideal para fazer convites atenciosos."
+      },
+      {
+        "type": "spot_the_difference",
+        "text_a": "Teacher: Does Maria Luísa bring her lunch? Parent: Yes, she does.",
+        "text_b": "Teacher: Did Maria Luísa bring her lunch? Parent: Yes, she did.",
+        "correct_differences": [
+          "O Texto A está no Presente Simples e o Texto B está no Passado Simples."
+        ],
+        "explanation": "O Texto A pergunta sobre o hábito diário (Does/does), enquanto o Texto B pergunta sobre um dia específico no passado (Did/did)."
+      },
+      {
+        "type": "spot_the_difference",
+        "text_a": "Church member: Will you join our group? You: Yes, I will.",
+        "text_b": "Church member: Do you join our group? You: Yes, I do.",
+        "correct_differences": [
+          "O Texto A pergunta sobre uma decisão futura, enquanto o Texto B pergunta sobre uma prática habitual."
+        ],
+        "explanation": "'Will' (Texto A) foca no plano para o futuro; 'Do' (Texto B) foca em um hábito presente."
+      },
+      {
+        "type": "classify_register",
+        "sentence": "Would you like to sit with us at church?",
+        "options": [
+          "Formal / Muito Cortês",
+          "Informal",
+          "Incorreta"
+        ],
+        "correct_index": 0,
+        "explanation": "'Would you like...?' é a estrutura recomendada para demonstrar cortesia e educação."
+      },
+      {
+        "type": "classify_register",
+        "sentence": "Did she go to school?",
+        "options": [
+          "Padrão / Neutro",
+          "Muito Formal",
+          "Gíria Informal"
+        ],
+        "correct_index": 0,
+        "explanation": "Perguntas diretas com 'Did' são o padrão neutro para o dia a dia na comunidade e na escola."
+      }
+    ]
+  };
+
+  // STATE VARIABLES
+  let currentIndex = 0;
+  const totalItems = moduleData.items.length;
+  const userAnswers = Array(totalItems).fill(null).map(() => ({
+    answered: false,
+    isCorrect: false,
+    selectedIndex: null,
+    userText: ""
+  }));
+
+  // SPEECH SYNTHESIS SETUP
+  function playAudio(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    const targetAccent = moduleData.accent || 'en-GB';
+    
+    let voices = window.speechSynthesis.getVoices();
+    let selectedVoice = voices.find(v => v.lang.replace('_', '-').toLowerCase().startsWith(targetAccent.toLowerCase()));
+    
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith('en'));
+    }
+    
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+    utterance.lang = targetAccent;
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Pre-load voices for browser compatibility
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.getVoices();
+    };
+  }
+
+  // NORMALIZATION & EXACT MATCH ALGORITHM
+  function normalizeString(str) {
+    if (!str) return "";
+    let res = str.trim().replace(/\s+/g, " ").toLowerCase();
+    res = res.replace(/[.,!?;:]+$/, "");
+    if ((res.startsWith('"') && res.endsWith('"')) || (res.startsWith("'") && res.endsWith("'"))) {
+      res = res.substring(1, res.length - 1).trim();
+    }
+    res = res.replace(/[.,!?;:]+$/, "");
+    return res;
+  }
+
+  function checkExactMatch(userInput, correctTarget) {
+    const normInput = normalizeString(userInput);
+    if (Array.isArray(correctTarget)) {
+      return correctTarget.some(target => normalizeString(target) === normInput);
+    }
+    return normalizeString(correctTarget) === normInput;
+  }
+
+  // RENDER ITEM
+  function renderItem() {
+    const item = moduleData.items[currentIndex];
+    const state = userAnswers[currentIndex];
+    const contentArea = document.getElementById("contentArea");
+    
+    // Update Header
+    document.getElementById("itemCounter").innerText = `Item ${currentIndex + 1} de ${totalItems}`;
+    const score = userAnswers.filter(a => a.answered && a.isCorrect).length;
+    document.getElementById("scoreCounter").innerText = `Acertos: ${score} de ${totalItems}`;
+    document.getElementById("progressBar").style.width = `${((currentIndex + 1) / totalItems) * 100}%`;
+
+    // Render Body according to Type
+    let html = "";
+
+    if (item.type === "audio_error_spotting") {
+      html += `
+        <div>
+          <div class="task-title">
+            <span>Ouça o áudio e selecione a opção gramaticalmente CORRETA:</span>
+          </div>
+          <button class="audio-btn" onclick="playAudio('${item.audio_text.replace(/'/g, "\\'")}')">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            Ouvir Áudio
+          </button>
+          <div class="options-list">
+            ${item.sentence_options.map((opt, idx) => `
+              <button class="option-btn ${getOptionClass(idx)}" 
+                      onclick="handleOptionSelect(${idx})" 
+                      ${state.answered ? 'disabled' : ''}>
+                ${opt}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    } else if (item.type === "error_spotting") {
+      html += `
+        <div>
+          <div class="task-title">Identifique a opção gramaticalmente CORRETA:</div>
+          <div class="options-list">
+            ${item.sentence_options.map((opt, idx) => `
+              <button class="option-btn ${getOptionClass(idx)}" 
+                      onclick="handleOptionSelect(${idx})" 
+                      ${state.answered ? 'disabled' : ''}>
+                ${opt}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    } else if (item.type === "compare_contrast") {
+      html += `
+        <div>
+          <div class="task-title">Compare as duas frases abaixo:</div>
+          <div class="comparison-grid">
+            <div class="compare-card">
+              <label>Frase A</label>
+              <div>${item.sentence_a}</div>
+            </div>
+            <div class="compare-card">
+              <label>Frase B</label>
+              <div>${item.sentence_b}</div>
+            </div>
+          </div>
+          <div class="text-input-container">
+            <label class="text-input-label">${item.question}</label>
+            <input type="text" id="freeInput" class="free-input" 
+                   placeholder="Digite sua resposta aqui..." 
+                   value="${state.userText}" 
+                   ${state.answered ? 'disabled' : ''} />
+            ${!state.answered ? `
+              <button class="submit-text-btn" onclick="handleTextSubmit()">Confirmar Resposta</button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    } else if (item.type === "spot_the_difference") {
+      html += `
+        <div>
+          <div class="task-title">Encontre a diferença conceitual/gramatical entre os dois diálogos:</div>
+          <div class="comparison-grid">
+            <div class="compare-card">
+              <label>Texto A</label>
+              <div>${item.text_a}</div>
+            </div>
+            <div class="compare-card">
+              <label>Texto B</label>
+              <div>${item.text_b}</div>
+            </div>
+          </div>
+          <div class="text-input-container">
+            <label class="text-input-label">Qual é a principal diferença entre os textos?</label>
+            <input type="text" id="freeInput" class="free-input" 
+                   placeholder="Digite a diferença observada..." 
+                   value="${state.userText}" 
+                   ${state.answered ? 'disabled' : ''} />
+            ${!state.answered ? `
+              <button class="submit-text-btn" onclick="handleTextSubmit()">Confirmar Resposta</button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    } else if (item.type === "classify_register") {
+      html += `
+        <div>
+          <div class="task-title">Classifique o nível de formalidade/registro da frase:</div>
+          <div class="compare-card" style="margin-bottom: 20px; font-size: 1.1rem; font-weight: 600;">
+            "${item.sentence}"
+          </div>
+          <div class="options-list">
+            ${item.options.map((opt, idx) => `
+              <button class="option-btn ${getOptionClass(idx)}" 
+                      onclick="handleOptionSelect(${idx})" 
+                      ${state.answered ? 'disabled' : ''}>
+                ${opt}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Feedback Area
+    const feedbackClass = state.isCorrect ? 'correct' : 'incorrect';
+    const feedbackIcon = state.isCorrect ? '✓' : '✕';
+    const feedbackTitleText = state.isCorrect ? 'Correto!' : 'Incorreto!';
+
+    html += `
+      <div class="feedback-box ${state.answered ? feedbackClass : ''}" id="feedbackBox">
+        <div class="feedback-title">
+          <span>${feedbackIcon}</span>
+          <span>${feedbackTitleText}</span>
+        </div>
+        <div>${item.explanation}</div>
+      </div>
+    `;
+
+    contentArea.innerHTML = html;
+
+    // Navigation Buttons State
+    document.getElementById("prevBtn").disabled = currentIndex === 0;
+    const nextBtn = document.getElementById("nextBtn");
+    nextBtn.disabled = !state.answered;
+    nextBtn.innerText = (currentIndex === totalItems - 1) ? "Finalizar" : "Próximo";
+  }
+
+  function getOptionClass(idx) {
+    const state = userAnswers[currentIndex];
+    if (!state.answered) return '';
+    if (idx === state.selectedIndex) {
+      return state.isCorrect ? 'selected-correct' : 'selected-incorrect';
+    }
+    return '';
+  }
+
+  // INTERACTION HANDLERS
+  function handleOptionSelect(idx) {
+    const state = userAnswers[currentIndex];
+    if (state.answered) return;
+
+    const item = moduleData.items[currentIndex];
+    state.answered = true;
+    state.selectedIndex = idx;
+    state.isCorrect = (idx === item.correct_index);
+
+    renderItem();
+  }
+
+  function handleTextSubmit() {
+    const state = userAnswers[currentIndex];
+    if (state.answered) return;
+
+    const inputElem = document.getElementById("freeInput");
+    const val = inputElem ? inputElem.value : "";
+    if (!val.trim()) return;
+
+    const item = moduleData.items[currentIndex];
+    state.answered = true;
+    state.userText = val;
+
+    const target = item.correct_answer || item.correct_differences;
+    state.isCorrect = checkExactMatch(val, target);
+
+    renderItem();
+  }
+
+  function handlePrev() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderItem();
+    }
+  }
+
+  function handleNext() {
+    if (currentIndex < totalItems - 1) {
+      currentIndex++;
+      renderItem();
+    } else {
+      renderSummary();
+    }
+  }
+
+  // SUMMARY SCREEN
+  function renderSummary() {
+    const score = userAnswers.filter(a => a.isCorrect).length;
+    const percentage = Math.round((score / totalItems) * 100);
+
+    const widgetContainer = document.getElementById("widgetContainer");
+    widgetContainer.innerHTML = `
+      <div class="summary-container">
+        <div class="summary-title">Análise Concluída!</div>
+        <div class="summary-score">${score} / ${totalItems}</div>
+        <div class="summary-text">
+          Você acertou ${percentage}% dos exercícios de análise estrutural e contraste verbal.
+        </div>
+        <button class="restart-btn" onclick="restartWidget()">Revisar Atividades</button>
+      </div>
+    `;
+  }
+
+  function restartWidget() {
+    window.location.reload();
+  }
+
+  // INITIAL RENDER
+  renderItem();
+</script>
+
+</body>
+</html>
