@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remember Widget - Daily Practical Errands</title>
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --secondary: #1E5AA8;
+      --bg: #FFF8F0;
+      --card-bg: #FFFFFF;
+      --text: #222222;
+      --text-muted: #666666;
+      --correct-bg: #EAF2FC;
+      --correct-border: #1E5AA8;
+      --incorrect-bg: #FFF0E6;
+      --incorrect-border: #C75000;
+      --border-radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .widget-container {
+      width: 100%;
+      max-width: 650px;
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+
+    /* Header & Progress */
+    .header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background-color: #EAEAEA;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background-color: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .score-text {
+      color: var(--secondary);
+      font-weight: 700;
+    }
+
+    /* Card Main Content */
+    .card-content {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 240px;
+      justify-content: center;
+    }
+
+    .item-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--secondary);
+      line-height: 1.4;
+    }
+
+    .sentence-display {
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--text);
+      background: #F9F9F9;
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 4px solid var(--secondary);
+    }
+
+    /* Audio Button */
+    .btn-audio {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: #EAF2FC;
+      color: var(--secondary);
+      border: 2px solid var(--secondary);
+      padding: 12px 20px;
+      border-radius: 30px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      align-self: flex-start;
+      font-size: 1rem;
+    }
+
+    .btn-audio:hover {
+      background-color: var(--secondary);
+      color: #FFFFFF;
+    }
+
+    .btn-audio:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Options Grid */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-btn {
+      background-color: #FFFFFF;
+      border: 2px solid #E0E0E0;
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: 1rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--secondary);
+      background-color: #F0F5FA;
+    }
+
+    .option-btn.selected-correct {
+      background-color: var(--correct-bg);
+      border-color: var(--correct-border);
+      color: var(--secondary);
+      font-weight: 700;
+    }
+
+    .option-btn.selected-incorrect {
+      background-color: var(--incorrect-bg);
+      border-color: var(--incorrect-border);
+      color: var(--incorrect-border);
+      font-weight: 700;
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+    }
+
+    /* True / False Buttons */
+    .tf-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .tf-btn {
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 8px;
+      border: 2px solid #E0E0E0;
+      background: #FFFFFF;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    /* Scramble & Input */
+    .input-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .scrambled-box {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 1px;
+      background: #FFF0E6;
+      padding: 12px 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #E0E0E0;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .text-input:focus {
+      border-color: var(--secondary);
+    }
+
+    .btn-submit {
+      background-color: var(--secondary);
+      color: #FFFFFF;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      align-self: flex-end;
+    }
+
+    .hint-btn {
+      background: none;
+      border: none;
+      color: var(--secondary);
+      font-size: 0.9rem;
+      text-decoration: underline;
+      cursor: pointer;
+      align-self: flex-start;
+    }
+
+    .hint-text {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-style: italic;
+      background: #F0F5FA;
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+
+    /* Flashcard Flip */
+    .flashcard-container {
+      perspective: 1000px;
+      width: 100%;
+      height: 200px;
+      cursor: pointer;
+    }
+
+    .flashcard {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: var(--border-radius);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+      border: 2px solid var(--secondary);
+    }
+
+    .flashcard-front {
+      background-color: #FFFFFF;
+      color: var(--secondary);
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    .flashcard-back {
+      background-color: var(--correct-bg);
+      color: var(--secondary);
+      transform: rotateY(180deg);
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    .card-tap-hint {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Feedback Box */
+    .feedback-box {
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .feedback-box.correct {
+      background-color: var(--correct-bg);
+      border: 2px solid var(--correct-border);
+      color: var(--secondary);
+    }
+
+    .feedback-box.incorrect {
+      background-color: var(--incorrect-bg);
+      border: 2px solid var(--incorrect-border);
+      color: var(--incorrect-border);
+    }
+
+    /* Footer Navigation */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .btn-nav {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-prev {
+      background-color: #EAEAEA;
+      color: var(--text);
+    }
+
+    .btn-prev:hover:not(:disabled) {
+      background-color: #DDD;
+    }
+
+    .btn-next {
+      background-color: var(--primary);
+      color: #FFFFFF;
+      margin-left: auto;
+    }
+
+    .btn-next:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .btn-nav:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Summary Screen */
+    .summary-card {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 20px 0;
+    }
+
+    .summary-title {
+      font-size: 1.8rem;
+      color: var(--secondary);
+      font-weight: 700;
+    }
+
+    .summary-score-box {
+      background: var(--bg);
+      padding: 24px;
+      border-radius: 12px;
+      width: 100%;
+      border: 2px solid var(--primary);
+    }
+
+    .summary-score-num {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--secondary);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="widget-container">
+  <!-- Header -->
+  <header class="header" id="headerArea">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="header-info">
+      <span id="itemCounter">Item 1 de 20</span>
+      <span id="scoreCounter" class="score-text">0 de 18 corretas</span>
+    </div>
+  </header>
+
+  <!-- Dynamic Content Area -->
+  <main id="itemCard" class="card-content"></main>
+
+  <!-- Feedback Container -->
+  <div id="feedbackBox" class="feedback-box hidden"></div>
+
+  <!-- Footer Navigation -->
+  <footer class="footer" id="footerArea">
+    <button id="btnPrev" class="btn-nav btn-prev" onclick="prevItem()">Anterior</button>
+    <button id="btnNext" class="btn-nav btn-next" onclick="nextItem()" disabled>Próximo</button>
+  </footer>
+
+  <!-- Summary Screen -->
+  <div id="summaryCard" class="summary-card hidden">
+    <h2 class="summary-title">Resumo do Bloco 🎉</h2>
+    <div class="summary-score-box">
+      <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 8px;">Sua Pontuação Final:</p>
+      <div class="summary-score-num" id="finalScoreText">0 / 18</div>
+    </div>
+    <button class="btn-nav btn-next" style="margin: 0; width: 100%;" onclick="reviewBlock()">Revisar Exercícios</button>
+  </div>
+</div>
+
+<script>
+  const moduleData = {"prompt_source": "C", "topic": "Questions and Answers (do - did - will - would)", "theme": "Daily Practical Errands - Supermarket", "cefr_level": "A2", "accent": "en-GB", "brand": "Teacher dos Famosos", "module_id": "1_remember", "audio_ratio_target": 0.4, "items": [{"type": "audio_quiz", "audio_text": "Do you have fresh organic milk in stock today?", "sentence_with_blank": "___ you have fresh organic milk in stock today?", "options": ["Do", "Did", "Would"], "correct_index": 0, "feedback_correct": "Excelente! 🌟 Usamos 'Do' para perguntas no presente simples sobre a rotina ou estado atual do supermercado.", "feedback_incorrect": "Ainda não. Para perguntar sobre o presente (se eles têm leite hoje), usamos o auxiliar 'Do'."}, {"type": "audio_quiz", "audio_text": "Did you buy the tea bags on sale yesterday?", "sentence_with_blank": "___ you buy the tea bags on sale yesterday?", "options": ["Will", "Did", "Do"], "correct_index": 1, "feedback_correct": "Muito bem! 🎉 'Yesterday' indica passado, por isso o auxiliar correto é 'Did'.", "feedback_incorrect": "Atenção ao tempo verbal! Como a ação ocorreu ontem ('yesterday'), devemos usar 'Did'."}, {"type": "audio_quiz", "audio_text": "Will the store restock fresh sourdough bread tomorrow morning?", "sentence_with_blank": "___ the store restock fresh sourdough bread tomorrow morning?", "options": ["Would", "Did", "Will"], "correct_index": 2, "feedback_correct": "Acertou em cheio! 🍞 'Tomorrow morning' indica futuro, então usamos 'Will'.", "feedback_incorrect": "Observe a indicação de tempo 'tomorrow' (amanhã). O auxiliar de futuro é 'Will'."}, {"type": "audio_quiz", "audio_text": "Would you like a paper bag for your groceries, madam?", "sentence_with_blank": "___ you like a paper bag for your groceries, madam?", "options": ["Would", "Do", "Did"], "correct_index": 0, "feedback_correct": "Perfeito! 🛍️ 'Would you like...?' é a forma polida de oferecer ou perguntar preferências.", "feedback_incorrect": "Para oferecer algo educadamente no atendimento, a estrutura padrão é 'Would you like...?'."}, {"type": "audio_quiz", "audio_text": "Do they accept contactless payment at this checkout lane?", "sentence_with_blank": "___ they accept contactless payment at this checkout lane?", "options": ["Will", "Do", "Would"], "correct_index": 1, "feedback_correct": "Boa! 💳 Usamos 'Do' para saber uma regra ou fato geral do caixa no presente.", "feedback_incorrect": "Para fatos e certezas do presente geral, use o auxiliar 'Do'."}, {"type": "listening_quiz", "audio_text": "Did Lorraine find all the ingredients for the soup?", "options": ["Ela encontrou os ingredientes no passado.", "Ela vai comprar os ingredientes amanhã.", "Ela gostaria de comprar sopa agora."], "correct_index": 0, "feedback_correct": "Ótima escuta! 🎧 A pergunta com 'Did' refere-se a uma ação já concluída no passado.", "feedback_incorrect": "Preste atenção ao auxiliar 'Did'. Ele indica que a pergunta é sobre o passado."}, {"type": "listening_quiz", "audio_text": "Will self-service checkouts open in five minutes?", "options": ["Os caixas abriram há cinco minutos.", "Os caixas automáticos abrirão em cinco minutos.", "Você gostaria de abrir o caixa?"], "correct_index": 1, "feedback_correct": "Excelente compreensão! ⏱️ 'Will' projeta a ação para o futuro próximo.", "feedback_incorrect": "'Will' indica futuro. A frase pergunta se os caixas vão abrir daqui a pouco."}, {"type": "listening_quiz", "audio_text": "Would you mind helping me reach the top shelf?", "options": ["Você se importaria de me ajudar a pegar algo na prateleira?", "Você me ajudou ontem na prateleira?", "Você vai me ajudar amanhã?"], "correct_index": 0, "feedback_correct": "Perfeito! 🤝 'Would you mind...?' é um pedido muito cortês e formal em inglês britânico.", "feedback_incorrect": "'Would' aqui é usado para fazer um pedido muito educado no presente."}, {"type": "text_quiz", "sentence_with_blank": "___ you check the price of these British apples for me, please?", "options": ["Could", "Did", "Do"], "correct_index": 2, "feedback_correct": "Certinho! 🍎 'Do you check...' ou perguntas diretas no presente com 'Do' pedem confirmações simples de rotina.", "feedback_incorrect": "Para verificar ações habituais/atuais com 'you', o auxiliar do presente simples é 'Do'."}, {"type": "text_quiz", "sentence_with_blank": "___ Lorraine pay with her loyalty card an hour ago?", "options": ["Will", "Did", "Would"], "correct_index": 1, "feedback_correct": "Isso aí! 💳 'An hour ago' marca o tempo no passado, exigindo o auxiliar 'Did'.", "feedback_incorrect": "A expressão 'an hour ago' (uma hora atrás) indica passado. O auxiliar correto é 'Did'."}, {"type": "text_quiz", "sentence_with_blank": "___ extra discount vouchers arrive in the post next week?", "options": ["Did", "Would", "Will"], "correct_index": 2, "feedback_correct": "Muito bem! 📮 'Next week' refere-se ao futuro, por isso usamos 'Will'.", "feedback_incorrect": "A indicação 'next week' remete ao futuro. O auxiliar adequado é 'Will'."}, {"type": "text_quiz", "sentence_with_blank": "___ you prefer cheddar or butter for the recipe?", "options": ["Would", "Did", "Will"], "correct_index": 0, "feedback_correct": "Correto! 🧀 'Would you prefer...?' pergunta preferências de forma bastante polida.", "feedback_incorrect": "Para perguntar a preferência de alguém educadamente, use 'Would'."}, {"type": "text_quiz", "sentence_with_blank": "___ the supermarket open at 8:00 AM every Sunday?", "options": ["Do", "Does", "Did"], "correct_index": 1, "feedback_correct": "Mandou bem! 🕗 Como 'the supermarket' equivale a 'it', usamos 'Does' para hábitos do presente.", "feedback_incorrect": "Atenção ao sujeito! 'The supermarket' é 3ª pessoa do singular (it), logo usamos 'Does'."}, {"type": "flashcard_flip", "front": "Como perguntamos se algo aconteceu no passado no supermercado?", "back": "Usamos o auxiliar DID + sujeito + verbo principal no infinitivo (sem 'to'). Exemplo: 'Did you find the butter?'", "feedback_correct": "Ótimo estudo de memória! 🧠", "feedback_incorrect": "Revise o conceito do card para fixar o uso de 'Did'."}, {"type": "flashcard_flip", "front": "Qual auxiliar usamos para oferecer ajuda ou perguntar preferências com cortesia?", "back": "Usamos WOULD (ex: 'Would you like some help?' ou 'Would you prefer tea?').", "feedback_correct": "Excelente retenção! ☕", "feedback_incorrect": "Lembre-se de que 'Would' é o campeão da educação e cortesia!"}, {"type": "word_scramble", "scrambled": "you / store / Do / work / this / at / ?", "correct_answer": "Do you work at this store?", "hint": "Monte a pergunta no presente simples para o funcionário.", "feedback_correct": "Perfeito! 👏 A estrutura é: Auxiliar (Do) + Sujeito (you) + Verbo (work) + Complemento.", "feedback_incorrect": "A ordem correta das perguntas é: Auxiliar (Do) + Sujeito (you) + Verbo (work)..."}, {"type": "word_scramble", "scrambled": "restock / the / Will / milk / they / ?", "correct_answer": "Will they restock the milk?", "hint": "Pergunte sobre uma ação futura de repor o leite.", "feedback_correct": "Ótimo trabalho! 🥛 Auxiliar de futuro 'Will' vem no início da pergunta.", "feedback_incorrect": "Inicie a pergunta de futuro com o auxiliar 'Will' seguido do sujeito 'they'."}, {"type": "true_false", "statement": "Na pergunta 'Did you bought tomatoes?', a forma verbal do verbo principal está correta.", "correct_answer": false, "explanation": "Falso! Quando usamos o auxiliar no passado 'Did', o verbo principal deve voltar para a forma base (infinitivo sem to): 'Did you buy tomatoes?'."}, {"type": "true_false", "statement": "A frase 'Would you like a receipt?' é uma forma cortês usada pelo caixa ao oferecer a nota fiscal.", "correct_answer": true, "explanation": "Verdadeiro! 'Would you like...?' é a oferta padrão educada no comércio britânico e mundial."}, {"type": "true_false", "statement": "Usamos 'Will' para fazer perguntas sobre hábitos que tínhamos na infância.", "correct_answer": false, "explanation": "Falso! 'Will' é usado para o futuro ou decisões no momento da fala. Para passado usamos 'Did'."}]};
+
+  let currentIndex = 0;
+  let userAnswers = new Array(moduleData.items.length).fill(null);
+  let voices = [];
+
+  // Filter out flashcards for total score calculations
+  const scorableIndices = moduleData.items
+    .map((item, idx) => item.type !== 'flashcard_flip' ? idx : null)
+    .filter(idx => idx !== null);
+  const totalScorable = scorableIndices.length;
+
+  // Web Speech API Voice Setup
+  function initVoices() {
+    if ('speechSynthesis' in window) {
+      voices = window.speechSynthesis.getVoices();
+    }
+  }
+  if ('speechSynthesis' in window) {
+    initVoices();
+    window.speechSynthesis.onvoiceschanged = initVoices;
+  }
+
+  function playAudio(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const targetLang = moduleData.accent || "en-GB";
+
+    let selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang.toLowerCase().replace('_', '-')));
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith("en"));
+    }
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+    utterance.lang = targetLang;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Exact comparison logic for typed inputs
+  function normalizeString(str) {
+    if (!str) return "";
+    let s = str.trim();
+    s = s.replace(/\s+/g, ' ');
+    s = s.toLowerCase();
+    s = s.replace(/[.,!?;:]+$/, '');
+    s = s.replace(/^["']|["']$/g, '');
+    return s;
+  }
+
+  function updateHeader() {
+    const total = moduleData.items.length;
+    const progressPercent = ((currentIndex + 1) / total) * 100;
+    document.getElementById('progressFill').style.width = `${progressPercent}%`;
+    document.getElementById('itemCounter').innerText = `Item ${currentIndex + 1} de ${total}`;
+
+    const scoreCount = userAnswers.filter((ans, idx) => scorableIndices.includes(idx) && ans && ans.isCorrect).length;
+    document.getElementById('scoreCounter').innerText = `${scoreCount} de ${totalScorable} corretas`;
+  }
+
+  function renderCurrentItem() {
+    updateHeader();
+    const card = document.getElementById('itemCard');
+    const feedbackBox = document.getElementById('feedbackBox');
+    const btnNext = document.getElementById('btnNext');
+    const btnPrev = document.getElementById('btnPrev');
+
+    card.innerHTML = '';
+    feedbackBox.className = 'feedback-box hidden';
+    feedbackBox.innerHTML = '';
+
+    btnPrev.disabled = currentIndex === 0;
+    const item = moduleData.items[currentIndex];
+    const savedAns = userAnswers[currentIndex];
+
+    btnNext.disabled = !savedAns;
+    btnNext.innerText = currentIndex === moduleData.items.length - 1 ? 'Finalizar' : 'Próximo';
+
+    switch(item.type) {
+      case 'audio_quiz':
+        renderAudioQuiz(card, item, savedAns);
+        break;
+      case 'listening_quiz':
+        renderListeningQuiz(card, item, savedAns);
+        break;
+      case 'text_quiz':
+        renderTextQuiz(card, item, savedAns);
+        break;
+      case 'flashcard_flip':
+        renderFlashcard(card, item, savedAns);
+        break;
+      case 'word_scramble':
+        renderWordScramble(card, item, savedAns);
+        break;
+      case 'true_false':
+        renderTrueFalse(card, item, savedAns);
+        break;
+    }
+
+    if (savedAns) {
+      showFeedback(savedAns.isCorrect, savedAns.feedbackText, item.type === 'audio_quiz' ? item.audio_text : null);
+    }
+  }
+
+  // ITEM TYPE RENDERERS
+  function renderAudioQuiz(container, item, savedAns) {
+    const title = document.createElement('div');
+    title.className = 'item-title';
+    title.innerText = "Complete a frase corretamente:";
+
+    const sentence = document.createElement('div');
+    sentence.className = 'sentence-display';
+    sentence.innerText = item.sentence_with_blank;
+
+    const optionsGrid = document.createElement('div');
+    optionsGrid.className = 'options-grid';
+
+    item.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerText = opt;
+      if (savedAns) {
+        btn.disabled = true;
+        if (idx === item.correct_index) btn.classList.add('selected-correct');
+        else if (idx === savedAns.userIndex) btn.classList.add('selected-incorrect');
+      } else {
+        btn.onclick = () => handleChoice(idx, item.correct_index, item.feedback_correct, item.feedback_incorrect);
+      }
+      optionsGrid.appendChild(btn);
+    });
+
+    container.appendChild(title);
+    container.appendChild(sentence);
+    container.appendChild(optionsGrid);
+  }
+
+  function renderListeningQuiz(container, item, savedAns) {
+    const title = document.createElement('div');
+    title.className = 'item-title';
+    title.innerText = "Ouça o áudio e escolha a alternativa correta:";
+
+    const audioBtn = document.createElement('button');
+    audioBtn.className = 'btn-audio';
+    audioBtn.innerHTML = '🔊 Ouvir Áudio';
+    audioBtn.onclick = () => playAudio(item.audio_text);
+
+    const optionsGrid = document.createElement('div');
+    optionsGrid.className = 'options-grid';
+
+    item.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerText = opt;
+      if (savedAns) {
+        btn.disabled = true;
+        if (idx === item.correct_index) btn.classList.add('selected-correct');
+        else if (idx === savedAns.userIndex) btn.classList.add('selected-incorrect');
+      } else {
+        btn.onclick = () => handleChoice(idx, item.correct_index, item.feedback_correct, item.feedback_incorrect);
+      }
+      optionsGrid.appendChild(btn);
+    });
+
+    container.appendChild(title);
+    container.appendChild(audioBtn);
+    container.appendChild(optionsGrid);
+  }
+
+  function renderTextQuiz(container, item, savedAns) {
+    const title = document.createElement('div');
+    title.className = 'item-title';
+    title.innerText = "Escolha o auxiliar correto para preencher a lacuna:";
+
+    const sentence = document.createElement('div');
+    sentence.className = 'sentence-display';
+    sentence.innerText = item.sentence_with_blank;
+
+    const optionsGrid = document.createElement('div');
+    optionsGrid.className = 'options-grid';
+
+    item.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerText = opt;
+      if (savedAns) {
+        btn.disabled = true;
+        if (idx === item.correct_index) btn.classList.add('selected-correct');
+        else if (idx === savedAns.userIndex) btn.classList.add('selected-incorrect');
+      } else {
+        btn.onclick = () => handleChoice(idx, item.correct_index, item.feedback_correct, item.feedback_incorrect);
+      }
+      optionsGrid.appendChild(btn);
+    });
+
+    container.appendChild(title);
+    container.appendChild(sentence);
+    container.appendChild(optionsGrid);
+  }
+
+  function renderFlashcard(container, item, savedAns) {
+    const cardWrap = document.createElement('div');
+    cardWrap.className = 'flashcard-container';
+
+    const card = document.createElement('div');
+    card.className = `flashcard ${savedAns ? 'flipped' : ''}`;
+
+    const front = document.createElement('div');
+    front.className = 'flashcard-front';
+    front.innerHTML = `<div>${item.front}</div><div class="card-tap-hint">Clique para virar 🔄</div>`;
+
+    const back = document.createElement('div');
+    back.className = 'flashcard-back';
+    back.innerHTML = `<div>${item.back}</div>`;
+
+    card.appendChild(front);
+    card.appendChild(back);
+    cardWrap.appendChild(card);
+
+    cardWrap.onclick = () => {
+      if (!card.classList.contains('flipped')) {
+        card.classList.add('flipped');
+        if (!userAnswers[currentIndex]) {
+          userAnswers[currentIndex] = {
+            isCorrect: true,
+            feedbackText: item.feedback_correct,
+            userIndex: null
+          };
+          document.getElementById('btnNext').disabled = false;
+          showFeedback(true, item.feedback_correct);
+          updateHeader();
+        }
+      }
+    };
+
+    container.appendChild(cardWrap);
+  }
+
+  function renderWordScramble(container, item, savedAns) {
+    const title = document.createElement('div');
+    title.className = 'item-title';
+    title.innerText = "Ordene as palavras para formar a frase correta:";
+
+    const scrambleBox = document.createElement('div');
+    scrambleBox.className = 'scrambled-box';
+    scrambleBox.innerText = item.scrambled;
+
+    const inputWrap = document.createElement('div');
+    inputWrap.className = 'input-container';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'text-input';
+    input.placeholder = 'Digite a frase completa aqui...';
+    if (savedAns) {
+      input.value = savedAns.typedText;
+      input.disabled = true;
+    }
+
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'btn-submit';
+    submitBtn.innerText = 'Verificar';
+    if (savedAns) submitBtn.disabled = true;
+
+    if (item.hint) {
+      const hintBtn = document.createElement('button');
+      hintBtn.className = 'hint-btn';
+      hintBtn.innerText = '💡 Mostrar dica';
+      const hintText = document.createElement('div');
+      hintText.className = 'hint-text hidden';
+      hintText.innerText = item.hint;
+
+      hintBtn.onclick = () => hintText.classList.toggle('hidden');
+      inputWrap.appendChild(hintBtn);
+      inputWrap.appendChild(hintText);
+    }
+
+    submitBtn.onclick = () => {
+      const normInput = normalizeString(input.value);
+      const normCorrect = normalizeString(item.correct_answer);
+      const isCorrect = normInput === normCorrect;
+      const fbText = isCorrect ? item.feedback_correct : item.feedback_incorrect;
+
+      userAnswers[currentIndex] = {
+        isCorrect: isCorrect,
+        feedbackText: fbText,
+        typedText: input.value
+      };
+
+      renderCurrentItem();
+    };
+
+    inputWrap.appendChild(input);
+    inputWrap.appendChild(submitBtn);
+
+    container.appendChild(title);
+    container.appendChild(scrambleBox);
+    container.appendChild(inputWrap);
+  }
+
+  function renderTrueFalse(container, item, savedAns) {
+    const title = document.createElement('div');
+    title.className = 'item-title';
+    title.innerText = "Julgue a afirmação como Verdadeira ou Falsa:";
+
+    const sentence = document.createElement('div');
+    sentence.className = 'sentence-display';
+    sentence.innerText = item.statement;
+
+    const grid = document.createElement('div');
+    grid.className = 'tf-grid';
+
+    const btnTrue = document.createElement('button');
+    btnTrue.className = 'tf-btn';
+    btnTrue.innerText = 'Verdadeiro';
+
+    const btnFalse = document.createElement('button');
+    btnFalse.className = 'tf-btn';
+    btnFalse.innerText = 'Falso';
+
+    if (savedAns) {
+      btnTrue.disabled = true;
+      btnFalse.disabled = true;
+      if (item.correct_answer === true) btnTrue.classList.add('selected-correct');
+      else btnTrue.classList.add('selected-incorrect');
+
+      if (item.correct_answer === false) btnFalse.classList.add('selected-correct');
+      else btnFalse.classList.add('selected-incorrect');
+    } else {
+      btnTrue.onclick = () => handleTFChoice(true, item.correct_answer, item.explanation);
+      btnFalse.onclick = () => handleTFChoice(false, item.correct_answer, item.explanation);
+    }
+
+    grid.appendChild(btnTrue);
+    grid.appendChild(btnFalse);
+
+    container.appendChild(title);
+    container.appendChild(sentence);
+    container.appendChild(grid);
+  }
+
+  // RESPONSE HANDLERS
+  function handleChoice(selectedIdx, correctIdx, fbCorrect, fbIncorrect) {
+    const isCorrect = selectedIdx === correctIdx;
+    userAnswers[currentIndex] = {
+      isCorrect: isCorrect,
+      feedbackText: isCorrect ? fbCorrect : fbIncorrect,
+      userIndex: selectedIdx
+    };
+    renderCurrentItem();
+  }
+
+  function handleTFChoice(userVal, correctVal, explanation) {
+    const isCorrect = userVal === correctVal;
+    userAnswers[currentIndex] = {
+      isCorrect: isCorrect,
+      feedbackText: explanation,
+      userVal: userVal
+    };
+    renderCurrentItem();
+  }
+
+  function showFeedback(isCorrect, text, postAudioText = null) {
+    const box = document.getElementById('feedbackBox');
+    box.className = `feedback-box ${isCorrect ? 'correct' : 'incorrect'}`;
+    box.innerHTML = `<div>${text}</div>`;
+
+    if (postAudioText) {
+      const audioBtn = document.createElement('button');
+      audioBtn.className = 'btn-audio';
+      audioBtn.style.marginTop = '8px';
+      audioBtn.innerHTML = '🔊 Ouvir Pronúncia Completa';
+      audioBtn.onclick = () => playAudio(postAudioText);
+      box.appendChild(audioBtn);
+    }
+  }
+
+  // NAVIGATION
+  function prevItem() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderCurrentItem();
+    }
+  }
+
+  function nextItem() {
+    if (currentIndex < moduleData.items.length - 1) {
+      currentIndex++;
+      renderCurrentItem();
+    } else {
+      showSummary();
+    }
+  }
+
+  function showSummary() {
+    document.getElementById('headerArea').classList.add('hidden');
+    document.getElementById('itemCard').classList.add('hidden');
+    document.getElementById('feedbackBox').classList.add('hidden');
+    document.getElementById('footerArea').classList.add('hidden');
+
+    const scoreCount = userAnswers.filter((ans, idx) => scorableIndices.includes(idx) && ans && ans.isCorrect).length;
+    document.getElementById('finalScoreText').innerText = `${scoreCount} de ${totalScorable}`;
+    document.getElementById('summaryCard').classList.remove('hidden');
+  }
+
+  function reviewBlock() {
+    document.getElementById('summaryCard').classList.add('hidden');
+    document.getElementById('headerArea').classList.remove('hidden');
+    document.getElementById('itemCard').classList.remove('hidden');
+    document.getElementById('footerArea').classList.remove('hidden');
+    currentIndex = 0;
+    renderCurrentItem();
+  }
+
+  // INITIALIZE
+  renderCurrentItem();
+</script>
+</body>
+</html>
