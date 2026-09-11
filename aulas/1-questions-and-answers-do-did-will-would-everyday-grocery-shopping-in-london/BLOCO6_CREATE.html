@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloco 6: Produção Livre (Create)</title>
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --secondary: #1E5AA8;
+      --bg-color: #FFF8F0;
+      --card-bg: #FFFFFF;
+      --text-color: #2D3748;
+      --text-muted: #718096;
+      --border-color: #E2E8F0;
+      --accent-light: #EBF8FF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .widget-container {
+      width: 100%;
+      max-width: 680px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      border: 2px solid #FFE6D0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      padding: 20px 24px;
+      background-color: #FFFFFF;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .title-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: #FFF3E6;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .item-counter {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background-color: #EDF2F7;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* Content Area */
+    .content {
+      padding: 24px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .type-tag {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--secondary);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .context-box {
+      background-color: #F0F4F9;
+      border-left: 4px solid var(--secondary);
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+      color: #1A365D;
+      line-height: 1.5;
+    }
+
+    .prompt-text {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    /* Input Controls */
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      padding: 14px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 1rem;
+      color: var(--text-color);
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.15);
+    }
+
+    /* Voice Recording UI */
+    .voice-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background-color: #FFF8F0;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid #FFE0C2;
+    }
+
+    .btn-mic {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-mic:hover {
+      background-color: #E66E00;
+      transform: scale(1.05);
+    }
+
+    .btn-mic.recording {
+      background-color: #C75000;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(230, 110, 0, 0.6); }
+      70% { box-shadow: 0 0 0 10px rgba(230, 110, 0, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(230, 110, 0, 0); }
+    }
+
+    .voice-status {
+      font-size: 0.85rem;
+      color: var(--text-color);
+      font-weight: 500;
+    }
+
+    .saved-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.8rem;
+      color: var(--secondary);
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      margin-top: 4px;
+    }
+
+    .saved-badge.visible {
+      opacity: 1;
+    }
+
+    /* Navigation Footer */
+    .footer {
+      padding: 16px 24px;
+      background-color: #FFFFFF;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      background-color: #EDF2F7;
+      color: #4A5568;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #E2E8F0;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: #E66E00;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Summary Screen */
+    .summary-container {
+      display: none;
+      padding: 24px;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .summary-header {
+      text-align: center;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--bg-color);
+    }
+
+    .summary-header h2 {
+      color: var(--secondary);
+      font-size: 1.4rem;
+      margin-bottom: 6px;
+    }
+
+    .summary-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .summary-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .summary-item {
+      background-color: #F8FAFC;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .summary-item-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--secondary);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .summary-prompt {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    .summary-answer {
+      background-color: #FFFFFF;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #E2E8F0;
+      font-size: 0.9rem;
+      color: #2D3748;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .summary-answer.empty {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Audio Speaker Button */
+    .btn-audio {
+      background: none;
+      border: none;
+      color: var(--secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 50%;
+      transition: background-color 0.2s;
+    }
+
+    .btn-audio:hover {
+      background-color: rgba(30, 90, 168, 0.1);
+    }
+
+    .svg-icon {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <span class="title-badge">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          Produção Livre
+        </span>
+        <span class="item-counter" id="itemCounter">Item 1 de 8</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+      <div class="progress-text" id="progressText">0 de 8 produções concluídas</div>
+    </div>
+
+    <!-- Active Content Screen -->
+    <div class="content" id="activeContent">
+      <div class="type-tag" id="typeTag">
+        <!-- Dynamic type name -->
+      </div>
+
+      <div class="context-box" id="contextBox">
+        <!-- Dynamic context/scenario -->
+      </div>
+
+      <div class="prompt-text" id="promptText">
+        <!-- Dynamic prompt string -->
+      </div>
+
+      <div class="input-section">
+        <!-- Voice recording UI if applicable -->
+        <div class="voice-controls hidden" id="voiceControls">
+          <button class="btn-mic" id="btnMic" title="Clique para gravar fala">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+          </button>
+          <div class="voice-status" id="voiceStatus">Clique no microfone para falar ou digite abaixo:</div>
+        </div>
+
+        <textarea id="answerInput" placeholder="Escreva sua resposta em inglês aqui..."></textarea>
+        
+        <div class="saved-badge" id="savedBadge">
+          <svg class="svg-icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Resposta salva
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Screen -->
+    <div class="summary-container" id="summaryScreen">
+      <div class="summary-header">
+        <h2>Atividades Concluídas!</h2>
+        <p id="summarySubtitle">Você concluiu todas as produções propostas.</p>
+      </div>
+      <div class="summary-list" id="summaryList">
+        <!-- Summary items dynamically injected -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <button class="btn btn-secondary" id="btnPrev" disabled>
+        Anterior
+      </button>
+      <button class="btn btn-primary" id="btnNext" disabled>
+        Próximo
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Module JSON Data
+    const moduleData = {
+      "prompt_source": "C",
+      "topic": "Questions and Answers (do - did - will - would)",
+      "theme": "Daily Practical Errands - Supermarket",
+      "cefr_level": "A2",
+      "accent": "en-GB",
+      "brand": "Teacher dos Famosos",
+      "module_id": "6_create",
+      "prompts": [
+        {
+          "type": "dialogue_completion",
+          "dialogue_context": "Lorraine está no setor de hortifrúti do Sainsbury's e não encontra morangos frescos.",
+          "prompt": "Escreva uma pergunta em inglês que Lorraine faria ao funcionário usando 'DO' ou 'WILL' para saber se eles têm ou vão receber morangos frescos hoje."
+        },
+        {
+          "type": "situational_writing",
+          "scenario": "Você está no caixa de um supermercado em Londres e precisa perguntar se o estabelecimento aceita pagamento por aproximação no celular.",
+          "prompt": "Escreva uma Pergunta completa em inglês no presente usando o auxiliar 'DO'."
+        },
+        {
+          "type": "roleplay_script",
+          "scenario": "Lorraine comprou alguns itens ontem, mas percebeu um erro na nota fiscal. Ela volta ao supermercado hoje para esclarecer.",
+          "prompt": "Crie um mini-diálogo de 3 falas em inglês entre Lorraine e o atendente. Lorraine deve usar uma pergunta no passado com 'DID' para perguntar sobre a compra de ontem."
+        },
+        {
+          "type": "voice_recording_prompt",
+          "scenario": "Imagine que você é o atendente do caixa no supermercado britânico e quer oferecer uma sacola de papel e perguntar se a cliente gostaria da nota fiscal.",
+          "prompt": "Grave um áudio em inglês fazendo duas perguntas bem educadas para a cliente utilizando a estrutura 'WOULD YOU LIKE...'."
+        },
+        {
+          "type": "dialogue_completion",
+          "dialogue_context": "O atendente está repondo os estoques de leite vegetal na prateleira.",
+          "prompt": "Complete a fala de Lorraine em inglês fazendo uma pergunta cortês com 'WOULD YOU MIND...' pedindo para ele pegar uma caixa do fundo da prateleira."
+        },
+        {
+          "type": "situational_writing",
+          "scenario": "Sua governanta Lorraine quer saber se o supermercado estará aberto no feriado da próxima semana.",
+          "prompt": "Escreva uma Pergunta em inglês que ela pode enviar por e-mail ou perguntar ao gerente usando o auxiliar de futuro 'WILL'."
+        },
+        {
+          "type": "roleplay_script",
+          "scenario": "Interação no caixa do Sainsbury's na hora de pagar.",
+          "prompt": "Escreva um mini-roteiro de 4 linhas onde o caixa pergunta como Lorraine vai pagar e se ela tem o cartão fidelidade (usando 'WILL' e 'DO'), e Lorraine responde com as respostas curtas adequadas em inglês."
+        },
+        {
+          "type": "voice_recording_prompt",
+          "scenario": "Você precisa perguntar ao funcionário do supermercado se eles venderam todo o estoque de pão artesanal ontem.",
+          "prompt": "Grave um áudio em inglês formulando a pergunta corretamente no passado com o auxiliar 'DID'."
+        }
+      ]
+    };
+
+    // State Variables
+    let currentIndex = 0;
+    const totalItems = moduleData.prompts.length;
+    const userAnswers = Array(totalItems).fill('');
+    let recognition = null;
+    let isRecording = false;
+
+    // DOM Elements
+    const itemCounter = document.getElementById('itemCounter');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const activeContent = document.getElementById('activeContent');
+    const summaryScreen = document.getElementById('summaryScreen');
+    const typeTag = document.getElementById('typeTag');
+    const contextBox = document.getElementById('contextBox');
+    const promptText = document.getElementById('promptText');
+    const answerInput = document.getElementById('answerInput');
+    const voiceControls = document.getElementById('voiceControls');
+    const btnMic = document.getElementById('btnMic');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const savedBadge = document.getElementById('savedBadge');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const summaryList = document.getElementById('summaryList');
+    const summarySubtitle = document.getElementById('summarySubtitle');
+
+    // Type Labels
+    const typeLabels = {
+      'dialogue_completion': 'Completar Diálogo',
+      'situational_writing': 'Escrita Situacional',
+      'roleplay_script': 'Roleplay / Roteiro',
+      'voice_recording_prompt': 'Produção Oral (Voz)'
+    };
+
+    // Initialize Web Speech Recognition
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-GB'; // Accent alignment
+
+        recognition.onstart = () => {
+          isRecording = true;
+          btnMic.classList.add('recording');
+          voiceStatus.textContent = "Ouvindo... Fale agora em inglês.";
+        };
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          const currentVal = answerInput.value.trim();
+          answerInput.value = currentVal ? `${currentVal} ${transcript}` : transcript;
+          saveCurrentAnswer();
+          updateNavButtons();
+        };
+
+        recognition.onerror = () => {
+          voiceStatus.textContent = "Não foi possível reconhecer a fala. Tente novamente ou digite.";
+          stopRecording();
+        };
+
+        recognition.onend = () => {
+          stopRecording();
+        };
+      }
+    }
+
+    function stopRecording() {
+      isRecording = false;
+      btnMic.classList.remove('recording');
+      voiceStatus.textContent = "Clique no microfone para falar ou digite abaixo:";
+    }
+
+    // Toggle Voice Recording
+    btnMic.addEventListener('click', () => {
+      if (!recognition) return;
+      if (isRecording) {
+        recognition.stop();
+      } else {
+        try {
+          recognition.start();
+        } catch (e) {
+          stopRecording();
+        }
+      }
+    });
+
+    // Render Current Item
+    function renderItem(index) {
+      const item = moduleData.prompts[index];
+
+      // Update Header & Progress
+      itemCounter.textContent = `Item ${index + 1} de ${totalItems}`;
+      const filledCount = userAnswers.filter(a => a.trim() !== '').length;
+      const progressPercent = ((index + 1) / totalItems) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+      progressText.textContent = `${filledCount} de ${totalItems} produções concluídas`;
+
+      // Type Label
+      typeTag.textContent = typeLabels[item.type] || 'Produção Livre';
+
+      // Context / Scenario
+      const context = item.dialogue_context || item.scenario || '';
+      if (context) {
+        contextBox.textContent = context;
+        contextBox.classList.remove('hidden');
+      } else {
+        contextBox.classList.add('hidden');
+      }
+
+      // Prompt Text
+      promptText.textContent = item.prompt;
+
+      // Voice Controls Visibility
+      if (item.type === 'voice_recording_prompt' && recognition) {
+        voiceControls.classList.remove('hidden');
+      } else {
+        voiceControls.classList.add('hidden');
+      }
+
+      // Restore saved input
+      answerInput.value = userAnswers[index] || '';
+      savedBadge.classList.remove('visible');
+
+      updateNavButtons();
+    }
+
+    // Save Answer to Array
+    function saveCurrentAnswer() {
+      userAnswers[currentIndex] = answerInput.value;
+      if (answerInput.value.trim().length > 0) {
+        savedBadge.classList.add('visible');
+      } else {
+        savedBadge.classList.remove('visible');
+      }
+      
+      const filledCount = userAnswers.filter(a => a.trim() !== '').length;
+      progressText.textContent = `${filledCount} de ${totalItems} produções concluídas`;
+    }
+
+    // Input Event Listener
+    answerInput.addEventListener('input', () => {
+      saveCurrentAnswer();
+      updateNavButtons();
+    });
+
+    // Navigation Controls
+    function updateNavButtons() {
+      btnPrev.disabled = currentIndex === 0;
+
+      const hasText = answerInput.value.trim().length > 0;
+      btnNext.disabled = !hasText;
+
+      if (currentIndex === totalItems - 1) {
+        btnNext.textContent = 'Finalizar';
+      } else {
+        btnNext.textContent = 'Próximo';
+      }
+    }
+
+    btnPrev.addEventListener('click', () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderItem(currentIndex);
+      }
+    });
+
+    btnNext.addEventListener('click', () => {
+      if (currentIndex < totalItems - 1) {
+        currentIndex++;
+        renderItem(currentIndex);
+      } else {
+        showSummary();
+      }
+    });
+
+    // Show Final Summary
+    function showSummary() {
+      activeContent.classList.add('hidden');
+      summaryScreen.style.display = 'flex';
+
+      const filledCount = userAnswers.filter(a => a.trim() !== '').length;
+      progressBar.style.width = '100%';
+      progressText.textContent = `${filledCount} de ${totalItems} produções concluídas`;
+      itemCounter.textContent = 'Concluído';
+      summarySubtitle.textContent = `Você completou ${filledCount} de ${totalItems} atividades de produção oral e escrita.`;
+
+      summaryList.innerHTML = '';
+      moduleData.prompts.forEach((item, idx) => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'summary-item';
+
+        const numEl = document.createElement('div');
+        numEl.className = 'summary-item-num';
+        numEl.textContent = `Item ${idx + 1} - ${typeLabels[item.type] || 'Produção'}`;
+
+        const promptEl = document.createElement('div');
+        promptEl.className = 'summary-prompt';
+        promptEl.textContent = item.prompt;
+
+        const answerEl = document.createElement('div');
+        answerEl.className = 'summary-answer' + (userAnswers[idx].trim() ? '' : ' empty');
+        answerEl.textContent = userAnswers[idx].trim() || 'Nenhuma resposta inserida.';
+
+        itemEl.appendChild(numEl);
+        itemEl.appendChild(promptEl);
+        itemEl.appendChild(answerEl);
+        summaryList.appendChild(itemEl);
+      });
+
+      btnPrev.classList.add('hidden');
+      btnNext.classList.add('hidden');
+    }
+
+    // TTS Web Speech Utility (for accent compliance)
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop active speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        const voices = window.speechSynthesis.getVoices();
+        const targetLang = moduleData.accent || 'en-GB';
+        
+        let selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang.toLowerCase()));
+        if (!selectedVoice) {
+          selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith('en'));
+        }
+        
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+        utterance.lang = targetLang;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // Initialize Widget
+    window.addEventListener('DOMContentLoaded', () => {
+      initSpeechRecognition();
+      renderItem(currentIndex);
+
+      // Trigger voices load for SpeechSynthesis
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.getVoices();
+        };
+      }
+    });
+  </script>
+</body>
+</html>
