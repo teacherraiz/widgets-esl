@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloco 3: Aplicação Prática - Closed Questions</title>
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --primary-hover: #E06B00;
+      --secondary: #1E5AA8;
+      --secondary-hover: #164685;
+      --bg: #FFF8F0;
+      --card-bg: #FFFFFF;
+      --text: #2C3E50;
+      --text-muted: #666666;
+      --correct-color: #1E5AA8;
+      --correct-bg: #E8F0FE;
+      --correct-border: #1E5AA8;
+      --incorrect-color: #C75000;
+      --incorrect-bg: #FFF0E6;
+      --incorrect-border: #C75000;
+      --border-radius: 12px;
+      --shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 680px;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+      border: 1px solid rgba(30, 90, 168, 0.1);
+    }
+
+    /* Top Bar & Score */
+    .top-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .item-counter {
+      color: var(--secondary);
+    }
+
+    .score-counter {
+      color: var(--secondary);
+      background: var(--correct-bg);
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(30, 90, 168, 0.2);
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background-color: #E2E8F0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Card Content Area */
+    .content-area {
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .type-badge {
+      align-self: flex-start;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      color: var(--secondary);
+      background: rgba(30, 90, 168, 0.08);
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .instruction-box {
+      background-color: rgba(255, 122, 0, 0.08);
+      border-left: 4px solid var(--primary);
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .context-box {
+      font-style: italic;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      background: #F8FAFC;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px dashed #CBD5E1;
+    }
+
+    .prompt-bubble {
+      background: var(--correct-bg);
+      border: 1px solid rgba(30, 90, 168, 0.2);
+      border-radius: 12px 12px 12px 2px;
+      padding: 12px 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--secondary);
+      margin-bottom: 16px;
+      display: inline-block;
+    }
+
+    /* Interactive Elements */
+    .audio-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-right: 12px;
+      vertical-align: middle;
+      box-shadow: 0 2px 6px rgba(255, 122, 0, 0.3);
+    }
+
+    .audio-btn:hover {
+      background-color: var(--primary-hover);
+      transform: scale(1.05);
+    }
+
+    .audio-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    .cloze-text {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .text-input {
+      border: 2px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 1.1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+      max-width: 320px;
+      margin-top: 8px;
+    }
+
+    .text-input:focus {
+      border-color: var(--secondary);
+    }
+
+    .text-input.inline {
+      display: inline-block;
+      width: 140px;
+      margin: 0 4px;
+      text-align: center;
+    }
+
+    .word-bank {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .chip-btn {
+      background: #F1F5F9;
+      border: 2px solid #CBD5E1;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chip-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: #FFF8F0;
+    }
+
+    .chip-btn.selected {
+      background: var(--secondary);
+      color: white;
+      border-color: var(--secondary);
+    }
+
+    .chip-btn:disabled {
+      cursor: default;
+      opacity: 0.7;
+    }
+
+    /* Sentence Building Zones */
+    .building-zone {
+      min-height: 54px;
+      border: 2px dashed #CBD5E1;
+      border-radius: 12px;
+      padding: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+      background: #FAFBFD;
+    }
+
+    /* Action & Submit Button */
+    .action-container {
+      margin-top: 12px;
+    }
+
+    .check-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+
+    .check-btn:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+    }
+
+    .check-btn:disabled {
+      background-color: #E2E8F0;
+      color: #94A3B8;
+      cursor: not-allowed;
+    }
+
+    /* Feedback Display */
+    .feedback-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .feedback-box.correct {
+      display: block;
+      background-color: var(--correct-bg);
+      color: var(--correct-color);
+      border: 1px solid var(--correct-border);
+    }
+
+    .feedback-box.incorrect {
+      display: block;
+      background-color: var(--incorrect-bg);
+      color: var(--incorrect-color);
+      border: 1px solid var(--incorrect-border);
+    }
+
+    /* Navigation Footer */
+    .nav-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid #E2E8F0;
+      padding-top: 16px;
+    }
+
+    .nav-btn {
+      background-color: transparent;
+      color: var(--secondary);
+      border: 2px solid var(--secondary);
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      max-width: 140px;
+      text-align: center;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background-color: var(--secondary);
+      color: white;
+    }
+
+    .nav-btn:disabled {
+      border-color: #CBD5E1;
+      color: #94A3B8;
+      cursor: not-allowed;
+    }
+
+    .nav-btn.next-btn {
+      background-color: var(--secondary);
+      color: white;
+      margin-left: auto;
+    }
+
+    .nav-btn.next-btn:hover:not(:disabled) {
+      background-color: var(--secondary-hover);
+    }
+
+    /* Summary Screen */
+    .summary-screen {
+      display: none;
+      text-align: center;
+      padding: 20px 10px;
+    }
+
+    .summary-title {
+      color: var(--secondary);
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .summary-score {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 16px 0;
+    }
+
+    .summary-text {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* Input lock states */
+    .text-input:disabled {
+      background-color: #F8FAFC;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Top Progress Bar -->
+  <div class="top-bar" id="topBar">
+    <div class="header-info">
+      <span class="item-counter" id="itemCounter">Item 1 de 20</span>
+      <span class="score-counter" id="scoreCounter">0 de 20 corretas</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+  </div>
+
+  <!-- Main Question Content Area -->
+  <div class="content-area" id="contentArea">
+    <!-- Dynamic item content rendered here -->
+  </div>
+
+  <!-- Summary Screen Area -->
+  <div class="summary-screen" id="summaryScreen">
+    <h2 class="summary-title">Atividade Concluída!</h2>
+    <p>Seu desempenho total no exercício:</p>
+    <div class="summary-score" id="summaryScore">0 / 20</div>
+    <p class="summary-text" id="summaryMessage">Ótimo trabalho praticando a estrutura das perguntas!</p>
+    <button class="check-btn" style="max-width: 200px; margin: 0 auto;" onclick="restartOrReview()">Revisar Respostas</button>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="nav-footer" id="navFooter">
+    <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>Anterior</button>
+    <button class="nav-btn next-btn" id="nextBtn" onclick="navigate(1)" disabled>Próximo</button>
+  </div>
+</div>
+
+<script>
+  // Data passed from prompt JSON
+  const quizData = {
+    "prompt_source": "C",
+    "topic": "Closed Questions and Yes/no + subject + auxiliary Answers (do - did - will - would)",
+    "theme": "B. IMMIGRANT",
+    "cefr_level": "A1",
+    "accent": "en-GB",
+    "brand": "Teacher dos Famosos",
+    "module_id": "3_apply",
+    "audio_ratio_target": 0.2,
+    "items": [
+      {
+        "type": "audio_cloze",
+        "audio_text": "Does Maria Luísa go to school today?",
+        "cloze_text": "___ Maria Luísa go to school today?",
+        "correct_answer": "Does",
+        "feedback_correct": "Ótimo! 'Does' é usado para a rotina de hoje (she).",
+        "feedback_incorrect": "Lembre-se: Maria Luísa é 'she', então no presente usava-se 'Does'."
+      },
+      {
+        "type": "audio_cloze",
+        "audio_text": "Did you talk to the headteacher?",
+        "cloze_text": "___ you talk to the headteacher?",
+        "correct_answer": "Did",
+        "feedback_correct": "Perfeito! A fala mencionou uma ação passada com 'Did'.",
+        "feedback_incorrect": "A palavra ouvida no início para o passado foi 'Did'."
+      },
+      {
+        "type": "audio_cloze",
+        "audio_text": "Will the church meeting start at six?",
+        "cloze_text": "___ the church meeting start at six?",
+        "correct_answer": "Will",
+        "feedback_correct": "Excelente! Pergunta sobre evento futuro usa 'Will'.",
+        "feedback_incorrect": "Para perguntar sobre um evento futuro, use 'Will'."
+      },
+      {
+        "type": "audio_cloze",
+        "audio_text": "Would you like a newsletter from the church?",
+        "cloze_text": "___ you like a newsletter from the church?",
+        "correct_answer": "Would",
+        "feedback_correct": "Muito bem! Oferta educada ouvida com 'Would'.",
+        "feedback_incorrect": "A oferta cortês ouvida inicia com 'Would'."
+      },
+      {
+        "type": "text_cloze",
+        "cloze_text": "Does Maria Luísa study English? Yes, she ___.",
+        "correct_answer": "does",
+        "feedback_correct": "Correto! Resposta curta alinhada com 'Does'.",
+        "feedback_incorrect": "Complete a resposta curta com o mesmo auxiliar da pergunta: 'does'."
+      },
+      {
+        "type": "text_cloze",
+        "cloze_text": "Did she enjoy the school trip? No, she ___.",
+        "correct_answer": "didn't",
+        "feedback_correct": "Muito bem! Negativa no passado é 'didn't'.",
+        "feedback_incorrect": "A negação curta no passado para 'did' é 'didn't'."
+      },
+      {
+        "type": "text_cloze",
+        "cloze_text": "Will you go to the church picnic? Yes, I ___.",
+        "correct_answer": "will",
+        "feedback_correct": "Perfeito! Resposta afirmativa no futuro usa 'will'.",
+        "feedback_incorrect": "A pergunta começou com 'Will', responda com 'will'."
+      },
+      {
+        "type": "text_cloze",
+        "cloze_text": "Would you attend the teacher meeting? No, I ___.",
+        "correct_answer": "wouldn't",
+        "feedback_correct": "Excelente! Negativa cortês usa 'wouldn't'.",
+        "feedback_incorrect": "A forma negativa curta de 'would' é 'wouldn't'."
+      },
+      {
+        "type": "fill_in_the_gap",
+        "cloze_text": "___ Maria Luísa wear her coat to school yesterday?",
+        "word_bank": ["Did", "Does", "Will"],
+        "correct_answer": "Did",
+        "feedback_correct": "Boa! 'Yesterday' exige 'Did'.",
+        "feedback_incorrect": "A palavra 'yesterday' indica passado, selecione 'Did'."
+      },
+      {
+        "type": "fill_in_the_gap",
+        "cloze_text": "___ you like some tea before the church service?",
+        "word_bank": ["Would", "Did", "Do"],
+        "correct_answer": "Would",
+        "feedback_correct": "Correto! 'Would you like...?' é o padrão de gentileza.",
+        "feedback_incorrect": "Para oferecer chá educadamente, escolha 'Would'."
+      },
+      {
+        "type": "fill_in_the_gap",
+        "cloze_text": "___ children play in the church yard on Sundays?",
+        "word_bank": ["Do", "Does", "Did"],
+        "correct_answer": "Do",
+        "feedback_correct": "Perfeito! 'Children' está no plural (they), então usamos 'Do'.",
+        "feedback_incorrect": "'Children' é plural (eles/elas), portanto o auxiliar no presente é 'Do'."
+      },
+      {
+        "type": "fill_in_the_gap",
+        "cloze_text": "___ the school open next Monday?",
+        "word_bank": ["Will", "Did", "Does"],
+        "correct_answer": "Will",
+        "feedback_correct": "Muito bem! 'Next Monday' refere-se ao futuro.",
+        "feedback_incorrect": "'Next Monday' é futuro, selecione o auxiliar 'Will'."
+      },
+      {
+        "type": "sentence_transformation",
+        "original_sentence": "She goes to school by bus.",
+        "instruction": "Transforme esta frase em uma pergunta direta no presente simples.",
+        "correct_answer": "Does she go to school by bus?",
+        "feedback_correct": "Incrível! Lembrou de usar 'Does' e voltar o verbo 'go' para o infinito.",
+        "feedback_incorrect": "Inicie com 'Does', troque o sujeito 'She' e use 'go' sem o 's': 'Does she go to school by bus?'"
+      },
+      {
+        "type": "sentence_transformation",
+        "original_sentence": "They attended the church service.",
+        "instruction": "Transforme esta frase em uma pergunta direta no passado simples.",
+        "correct_answer": "Did they attend the church service?",
+        "feedback_correct": "Ótimo trabalho! Usou 'Did' e o verbo 'attend' na forma base.",
+        "feedback_incorrect": "Para perguntar no passado, use 'Did' no começo e o verbo principal no presente: 'Did they attend...?'"
+      },
+      {
+        "type": "sentence_transformation",
+        "original_sentence": "Maria Luísa will join the club.",
+        "instruction": "Transforme esta frase em uma pergunta direta no futuro.",
+        "correct_answer": "Will Maria Luísa join the club?",
+        "feedback_correct": "Perfeito! Apenas colocou o auxiliar 'Will' no início.",
+        "feedback_incorrect": "Coloque 'Will' antes do sujeito: 'Will Maria Luísa join the club?'"
+      },
+      {
+        "type": "sentence_building",
+        "word_blocks": ["Does", "Maria Luísa", "her homework?", "finish"],
+        "correct_order": [0, 1, 3, 2],
+        "feedback_correct": "Correto! 'Does Maria Luísa finish her homework?'",
+        "feedback_incorrect": "A ordem deve ser: Auxiliar + Sujeito + Verbo principal + Complemento."
+      },
+      {
+        "type": "sentence_building",
+        "word_blocks": ["the pastor", "Did", "speak", "to you?"],
+        "correct_order": [1, 0, 2, 3],
+        "feedback_correct": "Excelente! 'Did the pastor speak to you?'",
+        "feedback_incorrect": "Comece com o auxiliar 'Did', seguido do sujeito 'the pastor'."
+      },
+      {
+        "type": "sentence_building",
+        "word_blocks": ["you", "Would", "the church?", "like to visit"],
+        "correct_order": [1, 0, 3, 2],
+        "feedback_correct": "Muito bem! 'Would you like to visit the church?'",
+        "feedback_incorrect": "A estrutura correta é: Would + you + like to visit + the church?"
+      },
+      {
+        "type": "role_play_response",
+        "dialogue_context": "Na secretaria da escola britânica, a recepcionista pergunta sobre a rotina da sua filha.",
+        "prompt_line": "Does Maria Luísa eat meat for school lunch?",
+        "correct_answer": "No, she doesn't.",
+        "feedback_correct": "Perfeito! Resposta curta negativa super natural e correta.",
+        "feedback_incorrect": "Responda de forma curta usando o presente negativo: 'No, she doesn't.'"
+      },
+      {
+        "type": "role_play_response",
+        "dialogue_context": "Na entrada da igreja, um voluntário pergunta sobre o próximo domingo.",
+        "prompt_line": "Will you attend our Sunday service next week?",
+        "correct_answer": "Yes, I will.",
+        "feedback_correct": "Ótimo! Resposta curta afirmativa no futuro rápida e segura.",
+        "feedback_incorrect": "Responda de forma curta usando o futuro afirmativo: 'Yes, I will.'"
+      }
+    ]
+  };
+
+  // State Management
+  let currentIndex = 0;
+  const totalItems = quizData.items.length;
+  const state = quizData.items.map(() => ({
+    answered: false,
+    isCorrect: false,
+    userAnswer: null,
+    buildingOrder: []
+  }));
+
+  // Speech Synthesis setup
+  let synth = window.speechSynthesis;
+  let voices = [];
+
+  function loadVoices() {
+    if (synth) {
+      voices = synth.getVoices();
+    }
+  }
+
+  if (synth) {
+    loadVoices();
+    if (synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = loadVoices;
+    }
+  }
+
+  function playAudio(text) {
+    if (!synth) return;
+    synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Voice selection based on accent
+    const targetAccent = quizData.accent || "en-GB";
+    let matchedVoice = voices.find(v => v.lang.replace('_', '-').toLowerCase() === targetAccent.toLowerCase());
+    if (!matchedVoice) {
+      matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetAccent.toLowerCase().slice(0, 2)));
+    }
+    if (!matchedVoice) {
+      matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith("en"));
+    }
+
+    if (matchedVoice) {
+      utterance.voice = matchedVoice;
+    }
+    utterance.lang = targetAccent;
+    synth.speak(utterance);
+  }
+
+  // Exact Text Normalization Logic
+  function normalizeText(str) {
+    if (!str) return '';
+    let s = String(str).trim();
+    s = s.replace(/\s+/g, ' ');
+    s = s.toLowerCase();
+    s = s.replace(/[.,!?;:]+$/g, '');
+    if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+      s = s.substring(1, s.length - 1).trim();
+    }
+    return s;
+  }
+
+  function compareAnswers(userAns, targetAns) {
+    const normUser = normalizeText(userAns);
+    if (Array.isArray(targetAns)) {
+      return targetAns.some(ans => normalizeText(ans) === normUser);
+    }
+    return normUser === normalizeText(targetAns);
+  }
+
+  // DOM Elements
+  const contentArea = document.getElementById('contentArea');
+  const itemCounter = document.getElementById('itemCounter');
+  const scoreCounter = document.getElementById('scoreCounter');
+  const progressBar = document.getElementById('progressBar');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const topBar = document.getElementById('topBar');
+  const navFooter = document.getElementById('navFooter');
+  const summaryScreen = document.getElementById('summaryScreen');
+
+  // Render Current Item
+  function renderItem() {
+    const item = quizData.items[currentIndex];
+    const itemState = state[currentIndex];
+
+    // Update Header
+    itemCounter.innerText = `Item ${currentIndex + 1} de ${totalItems}`;
+    const correctCount = state.filter(s => s.answered && s.isCorrect).length;
+    scoreCounter.innerText = `${correctCount} de ${totalItems} corretas`;
+    progressBar.style.width = `${((currentIndex + 1) / totalItems) * 100}%`;
+
+    // Nav Buttons State
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.innerText = currentIndex === totalItems - 1 ? 'Finalizar' : 'Próximo';
+    nextBtn.disabled = !itemState.answered;
+
+    contentArea.innerHTML = '';
+
+    const typeBadge = document.createElement('div');
+    typeBadge.className = 'type-badge';
+    typeBadge.innerText = getTypeLabel(item.type);
+    contentArea.appendChild(typeBadge);
+
+    // Build specific layout per type
+    switch (item.type) {
+      case 'audio_cloze':
+      case 'text_cloze':
+        renderCloze(item, itemState);
+        break;
+      case 'fill_in_the_gap':
+        renderFillInTheGap(item, itemState);
+        break;
+      case 'sentence_transformation':
+        renderTransformation(item, itemState);
+        break;
+      case 'sentence_building':
+        renderBuilding(item, itemState);
+        break;
+      case 'role_play_response':
+        renderRolePlay(item, itemState);
+        break;
+    }
+
+    // Feedback Box Placeholder/Render
+    const feedbackBox = document.createElement('div');
+    feedbackBox.id = 'feedbackBox';
+    feedbackBox.className = 'feedback-box';
+    if (itemState.answered) {
+      feedbackBox.className = `feedback-box ${itemState.isCorrect ? 'correct' : 'incorrect'}`;
+      feedbackBox.innerText = itemState.isCorrect ? item.feedback_correct : item.feedback_incorrect;
+    }
+    contentArea.appendChild(feedbackBox);
+  }
+
+  function getTypeLabel(type) {
+    const labels = {
+      'audio_cloze': 'Escuta & Preenchimento',
+      'text_cloze': 'Completar Lacuna',
+      'fill_in_the_gap': 'Banco de Palavras',
+      'sentence_transformation': 'Transformação de Frase',
+      'sentence_building': 'Construção de Frase',
+      'role_play_response': 'Resposta para Diálogo'
+    };
+    return labels[type] || 'Exercício';
+  }
+
+  // AUDIO & TEXT CLOZE
+  function renderCloze(item, itemState) {
+    const container = document.createElement('div');
+    
+    let audioMarkup = '';
+    if (item.audio_text) {
+      audioMarkup = `
+        <button class="audio-btn" onclick="playAudio('${escapeJsStr(item.audio_text)}')" title="Ouvir áudio">
+          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+      `;
+    }
+
+    const parts = item.cloze_text.split('___');
+    
+    container.innerHTML = `
+      <div class="cloze-text">
+        ${audioMarkup}
+        ${parts[0]}
+        <input type="text" id="clozeInput" class="text-input inline" 
+               value="${itemState.userAnswer || ''}" 
+               ${itemState.answered ? 'disabled' : ''} 
+               autocomplete="off" autocorrect="off" autocapitalize="none">
+        ${parts[1] || ''}
+      </div>
+      ${!itemState.answered ? `
+        <div class="action-container">
+          <button class="check-btn" onclick="checkCloze()">Verificar Resposta</button>
+        </div>
+      ` : ''}
+    `;
+
+    contentArea.appendChild(container);
+
+    if (!itemState.answered) {
+      setTimeout(() => {
+        const input = document.getElementById('clozeInput');
+        if (input) {
+          input.focus();
+          input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkCloze();
+          });
+        }
+      }, 50);
+    }
+  }
+
+  function checkCloze() {
+    const input = document.getElementById('clozeInput');
+    if (!input || !input.value.trim()) return;
+
+    const val = input.value;
+    const item = quizData.items[currentIndex];
+    const isCorrect = compareAnswers(val, item.correct_answer);
+
+    state[currentIndex].answered = true;
+    state[currentIndex].isCorrect = isCorrect;
+    state[currentIndex].userAnswer = val;
+
+    renderItem();
+  }
+
+  // FILL IN THE GAP (Word Bank Chips)
+  function renderFillInTheGap(item, itemState) {
+    const container = document.createElement('div');
+    const parts = item.cloze_text.split('___');
+    const selectedWord = itemState.userAnswer || '___';
+
+    let chipsHtml = item.word_bank.map(word => {
+      const isSelected = itemState.userAnswer === word;
+      return `<button class="chip-btn ${isSelected ? 'selected' : ''}" 
+                      ${itemState.answered ? 'disabled' : ''} 
+                      onclick="selectGapWord('${escapeJsStr(word)}')">${word}</button>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="cloze-text">
+        ${parts[0]} <strong style="color: var(--secondary); text-decoration: underline;">${selectedWord}</strong> ${parts[1] || ''}
+      </div>
+      <div class="word-bank">
+        ${chipsHtml}
+      </div>
+      ${!itemState.answered ? `
+        <div class="action-container" style="margin-top: 20px;">
+          <button class="check-btn" id="gapSubmitBtn" ${!itemState.userAnswer ? 'disabled' : ''} onclick="checkGap()">Verificar Resposta</button>
+        </div>
+      ` : ''}
+    `;
+
+    contentArea.appendChild(container);
+  }
+
+  function selectGapWord(word) {
+    if (state[currentIndex].answered) return;
+    state[currentIndex].userAnswer = word;
+    renderItem();
+  }
+
+  function checkGap() {
+    const itemState = state[currentIndex];
+    if (!itemState.userAnswer) return;
+
+    const item = quizData.items[currentIndex];
+    const isCorrect = compareAnswers(itemState.userAnswer, item.correct_answer);
+
+    itemState.answered = true;
+    itemState.isCorrect = isCorrect;
+
+    renderItem();
+  }
+
+  // SENTENCE TRANSFORMATION
+  function renderTransformation(item, itemState) {
+    const container = document.createElement('div');
+
+    container.innerHTML = `
+      <div class="instruction-box">${item.instruction}</div>
+      <div class="cloze-text" style="font-weight: 600; color: var(--secondary); margin-bottom: 12px;">
+        "${item.original_sentence}"
+      </div>
+      <input type="text" id="transInput" class="text-input" 
+             placeholder="Digite a frase transformada..."
+             value="${itemState.userAnswer || ''}" 
+             ${itemState.answered ? 'disabled' : ''} 
+             autocomplete="off" autocorrect="off">
+      ${!itemState.answered ? `
+        <div class="action-container">
+          <button class="check-btn" onclick="checkTransformation()">Verificar Resposta</button>
+        </div>
+      ` : ''}
+    `;
+
+    contentArea.appendChild(container);
+
+    if (!itemState.answered) {
+      setTimeout(() => {
+        const input = document.getElementById('transInput');
+        if (input) {
+          input.focus();
+          input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkTransformation();
+          });
+        }
+      }, 50);
+    }
+  }
+
+  function checkTransformation() {
+    const input = document.getElementById('transInput');
+    if (!input || !input.value.trim()) return;
+
+    const val = input.value;
+    const item = quizData.items[currentIndex];
+    const isCorrect = compareAnswers(val, item.correct_answer);
+
+    state[currentIndex].answered = true;
+    state[currentIndex].isCorrect = isCorrect;
+    state[currentIndex].userAnswer = val;
+
+    renderItem();
+  }
+
+  // SENTENCE BUILDING
+  function renderBuilding(item, itemState) {
+    const container = document.createElement('div');
+    const buildingOrder = itemState.buildingOrder || [];
+
+    // Constructed sentence chips
+    let constructedChips = buildingOrder.map(idx => {
+      const word = item.word_blocks[idx];
+      return `<button class="chip-btn selected" ${itemState.answered ? 'disabled' : ''} onclick="unselectBlock(${idx})">${word}</button>`;
+    }).join('');
+
+    // Available chips
+    let availableChips = item.word_blocks.map((word, idx) => {
+      if (buildingOrder.includes(idx)) return '';
+      return `<button class="chip-btn" ${itemState.answered ? 'disabled' : ''} onclick="selectBlock(${idx})">${word}</button>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="instruction-box">Clique nas palavras na ordem correta para formar a frase:</div>
+      <div class="building-zone">
+        ${constructedChips || '<span style="color:#94A3B8; font-size:0.9rem;">Sua frase aparecerá aqui...</span>'}
+      </div>
+      <div class="word-bank">
+        ${availableChips}
+      </div>
+      ${!itemState.answered ? `
+        <div class="action-container" style="margin-top: 20px;">
+          <button class="check-btn" ${buildingOrder.length !== item.word_blocks.length ? 'disabled' : ''} onclick="checkBuilding()">Verificar Resposta</button>
+        </div>
+      ` : ''}
+    `;
+
+    contentArea.appendChild(container);
+  }
+
+  function selectBlock(idx) {
+    if (state[currentIndex].answered) return;
+    if (!state[currentIndex].buildingOrder) state[currentIndex].buildingOrder = [];
+    state[currentIndex].buildingOrder.push(idx);
+    renderItem();
+  }
+
+  function unselectBlock(idx) {
+    if (state[currentIndex].answered) return;
+    state[currentIndex].buildingOrder = state[currentIndex].buildingOrder.filter(i => i !== idx);
+    renderItem();
+  }
+
+  function checkBuilding() {
+    const itemState = state[currentIndex];
+    const item = quizData.items[currentIndex];
+
+    const isCorrect = JSON.stringify(itemState.buildingOrder) === JSON.stringify(item.correct_order);
+
+    itemState.answered = true;
+    itemState.isCorrect = isCorrect;
+
+    renderItem();
+  }
+
+  // ROLE PLAY RESPONSE
+  function renderRolePlay(item, itemState) {
+    const container = document.createElement('div');
+
+    container.innerHTML = `
+      <div class="context-box">${item.dialogue_context}</div>
+      <div class="prompt-bubble">"${item.prompt_line}"</div>
+      <input type="text" id="roleInput" class="text-input" 
+             placeholder="Escreva sua resposta curta..." 
+             value="${itemState.userAnswer || ''}" 
+             ${itemState.answered ? 'disabled' : ''} 
+             autocomplete="off" autocorrect="off">
+      ${!itemState.answered ? `
+        <div class="action-container">
+          <button class="check-btn" onclick="checkRolePlay()">Verificar Resposta</button>
+        </div>
+      ` : ''}
+    `;
+
+    contentArea.appendChild(container);
+
+    if (!itemState.answered) {
+      setTimeout(() => {
+        const input = document.getElementById('roleInput');
+        if (input) {
+          input.focus();
+          input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkRolePlay();
+          });
+        }
+      }, 50);
+    }
+  }
+
+  function checkRolePlay() {
+    const input = document.getElementById('roleInput');
+    if (!input || !input.value.trim()) return;
+
+    const val = input.value;
+    const item = quizData.items[currentIndex];
+    const isCorrect = compareAnswers(val, item.correct_answer);
+
+    state[currentIndex].answered = true;
+    state[currentIndex].isCorrect = isCorrect;
+    state[currentIndex].userAnswer = val;
+
+    renderItem();
+  }
+
+  // Navigation Logic
+  function navigate(direction) {
+    const newIdx = currentIndex + direction;
+
+    if (newIdx >= totalItems) {
+      showSummary();
+      return;
+    }
+
+    if (newIdx >= 0 && newIdx < totalItems) {
+      currentIndex = newIdx;
+      renderItem();
+    }
+  }
+
+  function showSummary() {
+    topBar.style.display = 'none';
+    contentArea.style.display = 'none';
+    navFooter.style.display = 'none';
+
+    const correctCount = state.filter(s => s.isCorrect).length;
+    document.getElementById('summaryScore').innerText = `${correctCount} / ${totalItems}`;
+
+    const percentage = (correctCount / totalItems) * 100;
+    const msg = document.getElementById('summaryMessage');
+
+    if (percentage === 100) {
+      msg.innerText = "Excelente! Você dominou o uso de auxiliares em perguntas e respostas!";
+    } else if (percentage >= 70) {
+      msg.innerText = "Muito bem! Bom conhecimento das regras de auxiliares de perguntas.";
+    } else {
+      msg.innerText = "Bom esforço! Revise os itens incorretos para fortalecer a estrutura das perguntas.";
+    }
+
+    summaryScreen.style.display = 'block';
+  }
+
+  function restartOrReview() {
+    summaryScreen.style.display = 'none';
+    topBar.style.display = 'flex';
+    contentArea.style.display = 'flex';
+    navFooter.style.display = 'flex';
+    currentIndex = 0;
+    renderItem();
+  }
+
+  function escapeJsStr(str) {
+    return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+  }
+
+  // Initialize First Slide
+  renderItem();
+</script>
+</body>
+</html>
