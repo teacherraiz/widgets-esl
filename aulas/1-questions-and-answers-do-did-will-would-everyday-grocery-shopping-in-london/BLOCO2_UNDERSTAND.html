@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Questions and Answers - Module 2</title>
+  <style>
+    :root {
+      --primary-orange: #FF7A00;
+      --primary-orange-hover: #E06B00;
+      --primary-orange-light: #FFF8F0;
+      --secondary-blue: #1E5AA8;
+      --secondary-blue-hover: #15427D;
+      --secondary-blue-light: #EBF3FA;
+      --feedback-correct-bg: #EBF3FA;
+      --feedback-correct-border: #1E5AA8;
+      --feedback-incorrect-bg: #FFF0E6;
+      --feedback-incorrect-border: #C75000;
+      --bg-color: #FFF8F0;
+      --card-bg: #FFFFFF;
+      --text-color: #222222;
+      --border-radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .widget-container {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 760px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      border: 2px solid #EAEAEA;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header & Progress */
+    .header {
+      padding: 20px 24px;
+      background: #FFFFFF;
+      border-bottom: 2px solid var(--bg-color);
+    }
+
+    .header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .item-counter {
+      color: var(--secondary-blue);
+    }
+
+    .score-counter {
+      color: var(--secondary-blue);
+      background: var(--secondary-blue-light);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background-color: #EAEAEA;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--primary-orange);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Content Area */
+    .content {
+      padding: 24px;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .instruction {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--secondary-blue);
+      margin-bottom: 20px;
+    }
+
+    /* Matching Types */
+    .matching-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .matching-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .matching-column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .match-card {
+      background: var(--bg-color);
+      border: 2px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 54px;
+    }
+
+    .match-card:hover:not(.disabled) {
+      border-color: var(--secondary-blue);
+    }
+
+    .match-card.selected {
+      border-color: var(--primary-orange);
+      background: var(--primary-orange-light);
+      font-weight: bold;
+    }
+
+    .match-card.paired {
+      border-color: var(--secondary-blue);
+      background: var(--secondary-blue-light);
+    }
+
+    .match-badge {
+      background: var(--secondary-blue);
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    /* Audio Button */
+    .audio-btn {
+      background: var(--secondary-blue);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .audio-btn:hover {
+      background: var(--secondary-blue-hover);
+    }
+
+    /* Categorization Type */
+    .cat-items-pool {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .cat-item-card {
+      background: white;
+      border: 2px solid #EAEAEA;
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .cat-item-text {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .cat-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cat-btn {
+      background: var(--bg-color);
+      border: 1px solid var(--secondary-blue);
+      color: var(--secondary-blue);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cat-btn:hover:not(.disabled) {
+      background: var(--secondary-blue-light);
+    }
+
+    .cat-btn.selected {
+      background: var(--secondary-blue);
+      color: white;
+      font-weight: bold;
+    }
+
+    /* Sequencing Type */
+    .seq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .seq-item {
+      background: white;
+      border: 2px solid #EAEAEA;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .seq-text {
+      font-size: 0.95rem;
+      flex-grow: 1;
+    }
+
+    .seq-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .seq-btn {
+      background: var(--bg-color);
+      border: 1px solid #CCC;
+      border-radius: 4px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-weight: bold;
+      color: var(--secondary-blue);
+    }
+
+    .seq-btn:hover:not(:disabled) {
+      background: #EAEAEA;
+    }
+
+    .seq-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Odd One Out */
+    .odd-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .odd-card {
+      background: white;
+      border: 2px solid #EAEAEA;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .odd-card:hover:not(.disabled) {
+      border-color: var(--secondary-blue);
+      background: var(--secondary-blue-light);
+    }
+
+    .odd-card.selected {
+      border-color: var(--primary-orange);
+      background: var(--primary-orange-light);
+      font-weight: bold;
+    }
+
+    /* Feedback Section */
+    .feedback-panel {
+      margin-top: auto;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .feedback-panel.correct {
+      display: block;
+      background-color: var(--feedback-correct-bg);
+      border: 2px solid var(--feedback-correct-border);
+      color: var(--feedback-correct-border);
+    }
+
+    .feedback-panel.incorrect {
+      display: block;
+      background-color: var(--feedback-incorrect-bg);
+      border: 2px solid var(--feedback-incorrect-border);
+      color: var(--feedback-incorrect-border);
+    }
+
+    /* Navigation Footer */
+    .footer {
+      padding: 16px 24px;
+      background: #FFFFFF;
+      border-top: 2px solid var(--bg-color);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary {
+      background-color: #EAEAEA;
+      color: #555;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #DDD;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-orange);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--primary-orange-hover);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Summary Screen */
+    .summary-container {
+      text-align: center;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .summary-title {
+      font-size: 1.8rem;
+      color: var(--secondary-blue);
+    }
+
+    .summary-score {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--primary-orange);
+    }
+
+    .disabled {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="widget-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-info">
+      <span class="item-counter" id="itemCounter">Item 1 de 20</span>
+      <span class="score-counter" id="scoreCounter">Acertos: 0 de 20</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="contentArea">
+    <!-- Dynamic Content Loaded Here -->
+  </div>
+
+  <!-- Footer Navigation -->
+  <div class="footer" id="footerNav">
+    <button class="btn btn-secondary" id="btnPrev" onclick="prevItem()">Anterior</button>
+    <button class="btn btn-primary" id="btnAction" onclick="handleAction()">Verificar</button>
+  </div>
+</div>
+
+<script>
+  const moduleData = {"prompt_source": "C", "topic": "Questions and Answers (do - did - will - would)", "theme": "Daily Practical Errands - Supermarket", "cefr_level": "A2", "accent": "en-GB", "brand": "Teacher dos Famosos", "module_id": "2_understand", "audio_ratio_target": 0.4, "items": [{"type": "audio_matching", "pairs": [{"audio_text": "Do you need a basket for your items?", "right": "No, thank you, I have my trolley."}, {"audio_text": "Did you take the last bag of flour?", "right": "Yes, I did. Sorry about that!"}, {"audio_text": "Will the bakery open on Bank Holiday?", "right": "Yes, it will open at 9 AM."}, {"audio_text": "Would you like me to weigh these grapes?", "right": "Yes, please, that is very helpful."}], "feedback_correct": "Excelente associação auditiva! 🎧 Você conectou perfeitamente perguntas e respostas.", "feedback_incorrect": "Preste atenção ao auxiliar de cada pergunta para encontrar a resposta correspondente."}, {"type": "audio_matching", "pairs": [{"audio_text": "Do you sell gluten-free pasta here?", "right": "Yes, we do. It is in aisle 4."}, {"audio_text": "Did the price of eggs go up?", "right": "No, it didn't. It is the same."}, {"audio_text": "Will you pay by cash or card?", "right": "I will pay by debit card."}, {"audio_text": "Would Lorraine like some assistance?", "right": "Yes, she would like some help."}], "feedback_correct": "Combinação perfeita! 🛍️ Cada tempo verbal teve sua resposta correta.", "feedback_incorrect": "Observe que o auxiliar na pergunta costuma se repetir na resposta curta."}, {"type": "text_matching", "pairs": [{"left": "Do you have fresh salmon today?", "right": "Yes, we do. It arrived this morning."}, {"left": "Did you see the special offer on biscuits?", "right": "No, I didn't see it."}, {"left": "Will the store close early tonight?", "right": "No, it won't. It closes at 10 PM."}, {"left": "Would you prefer green or red apples?", "right": "I would prefer red ones, please."}], "feedback_correct": "Muito bem! 🔗 Relação perfeita entre perguntas e respostas adequadas.", "feedback_incorrect": "Verifique o tempo verbal de cada lado para associar corretamente."}, {"type": "text_matching", "pairs": [{"left": "Does Lorraine shop here often?", "right": "Yes, she does every Thursday."}, {"left": "Did they deliver the fresh milk on time?", "right": "Yes, they did. It is on the shelf."}, {"left": "Will there be another delivery today?", "right": "Yes, there will be one at 3 PM."}, {"left": "Would you like to join our club card program?", "right": "No, thank you, not today."}], "feedback_correct": "Ótimo raciocínio! 💡 Correspondência precisa no contexto de compras.", "feedback_incorrect": "Lembre-se: 'Does/Do' = presente, 'Did' = passado, 'Will' = futuro, 'Would' = condição/cortesia."}, {"type": "categorization", "categories": ["Present Habits / Facts (DO / DOES)", "Past Actions (DID)", "Future Intentions (WILL)", "Polite Requests / Offers (WOULD)"], "items": [{"text": "Do you accept meal vouchers?", "correct_category": "Present Habits / Facts (DO / DOES)"}, {"text": "Did you forget your shopping list?", "correct_category": "Past Actions (DID)"}, {"text": "Will the supermarket expand next year?", "correct_category": "Future Intentions (WILL)"}, {"text": "Would you mind holding this item?", "correct_category": "Polite Requests / Offers (WOULD)"}], "feedback_correct": "Excelente categorização! 🗂️ Você domina a função de cada verbo auxiliar.", "feedback_incorrect": "Analise a intenção da pergunta: é um hábito, uma ação passada, futura ou um pedido cortês?"}, {"type": "categorization", "categories": ["Questions about Present", "Questions about Past", "Questions about Future"], "items": [{"text": "Does Lorraine buy organic vegetables?", "correct_category": "Questions about Present"}, {"text": "Did the assistant help Lorraine with her bags?", "correct_category": "Questions about Past"}, {"text": "Will Sainsbury's offer discounts tomorrow?", "correct_category": "Questions about Future"}, {"text": "Do we need more olive oil?", "correct_category": "Questions about Present"}], "feedback_correct": "Ótima organização de tempos verbais! ⏱️", "feedback_incorrect": "Identifique o marcador ou o auxiliar para classificar o tempo verbal."}, {"type": "sequencing", "items_shuffled": ["Yes, we do. They are in aisle 2.", "Excuse me, do you have organic eggs?", "Thank you! I will get two cartons."], "correct_order": [1, 0, 2], "feedback_correct": "Diálogo ordenado com perfeição! 🛒 Faz todo sentido na conversa de compras.", "feedback_incorrect": "A ordem lógica começa com a pergunta do cliente ('Excuse me...'), seguida da resposta e do agradecimento."}, {"type": "sequencing", "items_shuffled": ["I would like to pay by card, please.", "Would you like paper or plastic bags?", "Paper bags, please. And how would you like to pay?"], "correct_order": [1, 2, 0], "feedback_correct": "Sequência do caixa perfeita! 💳 Muito natural para o dia a dia britânico.", "feedback_incorrect": "Reordene o diálogo pensando na interação no caixa do supermercado."}, {"type": "odd_one_out", "options": ["Do you need a receipt?", "Does she buy milk here?", "Did you buy cheese yesterday?", "Do they sell fresh fish?"], "correct_index": 2, "explanation": "'Did you buy cheese yesterday?' é a única pergunta no passado (DID). Todas as outras estão no presente (DO/DOES)."}, {"type": "odd_one_out", "options": ["Will you restock tomatoes tomorrow?", "Will the store open on Monday?", "Would you like some help with those boxes?", "Will they offer discounts next week?"], "correct_index": 2, "explanation": "'Would you like...' é um convite/oferta polida no presente. As outras três usam 'Will' para perguntar sobre fatos futuros."}, {"type": "odd_one_out", "options": ["Did Lorraine find the butter?", "Did the floor assistant answer?", "Did you print the coupon?", "Will Lorraine come back later?"], "correct_index": 3, "explanation": "'Will Lorraine come back later?' se refere ao futuro com 'Will'. As demais são perguntas no passado com 'Did'."}, {"type": "text_matching", "pairs": [{"left": "Do you stock oat milk?", "right": "Yes, in the dairy-free section."}, {"left": "Did you see Lorraine near aisle 3?", "right": "Yes, she was looking for tea."}, {"left": "Will the checkout queue be long?", "right": "No, more lanes are opening soon."}, {"left": "Would you mind scanned this coupon?", "right": "Not at all, give it to me."}], "feedback_correct": "Excelente compreensão temática! 🥑", "feedback_incorrect": "Associe as perguntas aos contextos corretos de ajuda no supermercado."}, {"type": "categorization", "categories": ["Short Answer: YES", "Short Answer: NO"], "items": [{"text": "Did you pay? -> Yes, I did.", "correct_category": "Short Answer: YES"}, {"text": "Do they open early? -> No, they don't.", "correct_category": "Short Answer: NO"}, {"text": "Will it rain tomorrow? -> No, it won't.", "correct_category": "Short Answer: NO"}, {"text": "Would you like help? -> Yes, I would.", "correct_category": "Short Answer: YES"}], "feedback_correct": "Respostas curtas categorizadas com sucesso! 👍👎", "feedback_incorrect": "Verifique se a resposta curta é afirmativa (Yes, [sujeito] [auxiliar]) ou negativa (No, [sujeito] [auxiliar]+not)."}, {"type": "sequencing", "items_shuffled": ["No problem! Did you find everything else alright?", "Excuse me, will you restock these cookies today?", "Yes, I did! Thank you very much."], "correct_order": [1, 0, 2], "feedback_correct": "Sequência impecável de atendimento! 🍪", "feedback_incorrect": "Inicie com a pergunta sobre estoque, seguida pela resposta do atendente e finalização da cliente."}, {"type": "odd_one_out", "options": ["Where do you keep the honey?", "When did the manager arrive?", "What will you buy at Sainsbury's?", "Do you need any shopping bags?"], "correct_index": 3, "explanation": "'Do you need any shopping bags?' é uma pergunta fechada (Yes/No Question). As outras são perguntas abertas com palavras interrogativas (Where, When, What)."}, {"type": "text_matching", "pairs": [{"left": "Does Sainsbury's close at 10 PM?", "right": "Yes, it does every weeknight."}, {"left": "Did you remember the loyalty card?", "right": "Oh no, I left it at home!"}, {"left": "Will you need help carrying these?", "right": "No, thanks, I have a trolley."}, {"left": "Would you like a printed receipt?", "right": "No, an e-receipt is fine."}], "feedback_correct": "Combinações perfeitas e cotidianas! 🧾", "feedback_incorrect": "Relacione a pergunta ao tipo de confirmação esperada no caixa."}, {"type": "categorization", "categories": ["Correct Short Answer Structure", "Incorrect Short Answer Structure"], "items": [{"text": "Do you like tea? -> Yes, I do.", "correct_category": "Correct Short Answer Structure"}, {"text": "Did you buy apples? -> Yes, I bought.", "correct_category": "Incorrect Short Answer Structure"}, {"text": "Will you come back? -> Yes, I will.", "correct_category": "Correct Short Answer Structure"}, {"text": "Would you like tea? -> Yes, I like.", "correct_category": "Incorrect Short Answer Structure"}], "feedback_correct": "Excelente análise gramatical! 🎯 Lembre-se: em inglês usá-se o auxiliar na resposta curta, não o verbo principal sozinho.", "feedback_incorrect": "Respostas curtas gramaticais usam o verbo auxiliar: 'Yes, I do' (não 'Yes, I buy')."}, {"type": "sequencing", "items_shuffled": ["Did you bring your own bag?", "Hello! Would you like help with your shopping today?", "Yes, please. Where can I find the tea bags?"], "correct_order": [1, 2, 0], "feedback_correct": "Ótimo diálogo de início de compras! ☕", "feedback_incorrect": "Comece com o cumprimento do atendente, a resposta de Lorraine e a pergunta sobre sacolas."}, {"type": "odd_one_out", "options": ["Would you like coffee?", "Would you mind moving?", "Would you help me?", "Did you like coffee?"], "correct_index": 3, "explanation": "'Did you like coffee?' está no passado simples. Todas as outras frases usam 'Would' para solicitações/ofertas polidas no presente."}, {"type": "text_matching", "pairs": [{"left": "Do we have enough milk for breakfast?", "right": "No, we don't. Lorraine will buy more."}, {"left": "Did the price increase this week?", "right": "Yes, it did by 10 pence."}, {"left": "Will you try the free food samples?", "right": "Yes, I will! They look delicious."}, {"left": "Would it be possible to get a discount?", "right": "Sorry, no, these items are not on sale."}], "feedback_correct": "Muito bem! Entendimento completo das interações no mercado! 🥖", "feedback_incorrect": "Verifique os pares para garantir que as respostas respondem exatamente ao auxiliar da pergunta."}]};
+
+  let currentIndex = 0;
+  let totalItems = moduleData.items.length;
+  let score = 0;
+  let state = [];
+
+  // Web Speech API Voice Setup
+  let synth = window.speechSynthesis;
+  let cachedVoices = [];
+
+  function loadVoices() {
+    if (typeof speechSynthesis !== 'undefined') {
+      cachedVoices = speechSynthesis.getVoices();
+    }
+  }
+  loadVoices();
+  if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function playAudio(text) {
+    if (!synth) return;
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    let targetLang = moduleData.accent || 'en-GB';
+    
+    let voices = cachedVoices.length ? cachedVoices : synth.getVoices();
+    let selectedVoice = voices.find(v => v.lang && v.lang.toLowerCase().replace('_','-').startsWith(targetLang.toLowerCase().replace('_','-')));
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+    }
+    if (selectedVoice) {
+      utter.voice = selectedVoice;
+    }
+    utter.lang = targetLang;
+    synth.speak(utter);
+  }
+
+  // Initialize State
+  function initState() {
+    state = moduleData.items.map((item) => {
+      let st = {
+        submitted: false,
+        isCorrect: false,
+        userSelection: null
+      };
+
+      if (item.type === 'audio_matching' || item.type === 'text_matching') {
+        // Pre-shuffle rights
+        let rights = item.pairs.map((p, i) => ({ text: p.right, originalIndex: i }));
+        // deterministic shuffle based on index for stability
+        rights.sort((a, b) => (a.text.length % 3) - (b.text.length % 3));
+        st.shuffledRights = rights;
+        st.pairsMap = {}; // leftIndex -> rightOriginalIndex
+        st.selectedLeft = null;
+      } else if (item.type === 'categorization') {
+        st.itemCategories = {}; // itemIndex -> categoryName
+      } else if (item.type === 'sequencing') {
+        st.currentOrder = item.items_shuffled.map((_, i) => i);
+      } else if (item.type === 'odd_one_out') {
+        st.selectedIndex = null;
+      }
+      return st;
+    });
+  }
+
+  function updateHeader() {
+    document.getElementById('itemCounter').innerText = `Item ${currentIndex + 1} de ${totalItems}`;
+    document.getElementById('scoreCounter').innerText = `Acertos: ${score} de ${totalItems}`;
+    let progress = ((currentIndex + 1) / totalItems) * 100;
+    document.getElementById('progressBar').style.width = `${progress}%`;
+  }
+
+  function renderCurrentItem() {
+    updateHeader();
+    const content = document.getElementById('contentArea');
+    content.innerHTML = '';
+    const item = moduleData.items[currentIndex];
+    const st = state[currentIndex];
+
+    // Navigation buttons state
+    document.getElementById('btnPrev').disabled = currentIndex === 0;
+    
+    const actionBtn = document.getElementById('btnAction');
+    if (st.submitted) {
+      actionBtn.innerText = (currentIndex === totalItems - 1) ? "Finalizar" : "Próximo";
+      actionBtn.disabled = false;
+    } else {
+      actionBtn.innerText = "Verificar";
+      actionBtn.disabled = !canSubmit();
+    }
+
+    // Render by type
+    if (item.type === 'audio_matching' || item.type === 'text_matching') {
+      renderMatching(item, st, content);
+    } else if (item.type === 'categorization') {
+      renderCategorization(item, st, content);
+    } else if (item.type === 'sequencing') {
+      renderSequencing(item, st, content);
+    } else if (item.type === 'odd_one_out') {
+      renderOddOneOut(item, st, content);
+    }
+
+    // Feedback panel
+    if (st.submitted) {
+      const fb = document.createElement('div');
+      fb.className = `feedback-panel ${st.isCorrect ? 'correct' : 'incorrect'}`;
+      let msg = st.isCorrect ? item.feedback_correct : item.feedback_incorrect;
+      if (item.type === 'odd_one_out' && item.explanation) {
+        msg = `${st.isCorrect ? 'Correto!' : 'Incorreto.'} ${item.explanation}`;
+      }
+      fb.innerText = msg;
+      content.appendChild(fb);
+    }
+  }
+
+  /* --- MATCHING RENDER & LOGIC --- */
+  function renderMatching(item, st, container) {
+    const title = document.createElement('div');
+    title.className = 'instruction';
+    title.innerText = item.type === 'audio_matching' 
+      ? 'Ouça o áudio da esquerda e conecte à resposta correta na direita:' 
+      : 'Associe cada pergunta da esquerda à resposta correspondente:';
+    container.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'matching-grid';
+
+    const colLeft = document.createElement('div');
+    colLeft.className = 'matching-column';
+    
+    const colRight = document.createElement('div');
+    colRight.className = 'matching-column';
+
+    item.pairs.forEach((pair, idx) => {
+      // Left Card
+      const leftCard = document.createElement('div');
+      let isPaired = st.pairsMap[idx] !== undefined;
+      let isSelected = st.selectedLeft === idx;
+      leftCard.className = `match-card ${isSelected ? 'selected' : ''} ${isPaired ? 'paired' : ''} ${st.submitted ? 'disabled' : ''}`;
+      
+      let leftHtml = '';
+      if (item.type === 'audio_matching') {
+        leftHtml = `<button class="audio-btn" onclick="event.stopPropagation(); playAudio('${escapeQuotes(pair.audio_text)}')">🔊 Ouvir ${idx+1}</button>`;
+      } else {
+        leftHtml = `<span>${pair.left}</span>`;
+      }
+
+      if (isPaired) {
+        let pairedRightPos = st.shuffledRights.findIndex(r => r.originalIndex === st.pairsMap[idx]);
+        leftHtml += `<span class="match-badge">${pairedRightPos + 1}</span>`;
+      }
+      leftCard.innerHTML = leftHtml;
+      
+      leftCard.onclick = () => {
+        if (st.submitted) return;
+        st.selectedLeft = idx;
+        renderCurrentItem();
+      };
+      colLeft.appendChild(leftCard);
+    });
+
+    st.shuffledRights.forEach((rObj, rIdx) => {
+      // Right Card
+      const rightCard = document.createElement('div');
+      // Find if this right object is paired to any left
+      let pairedLeftIdx = Object.keys(st.pairsMap).find(lIdx => st.pairsMap[lIdx] === rObj.originalIndex);
+      let isPaired = pairedLeftIdx !== undefined;
+
+      rightCard.className = `match-card ${isPaired ? 'paired' : ''} ${st.submitted ? 'disabled' : ''}`;
+      rightCard.innerHTML = `<span><strong>${rIdx + 1}.</strong> ${rObj.text}</span>`;
+
+      rightCard.onclick = () => {
+        if (st.submitted) return;
+        if (st.selectedLeft !== null) {
+          st.pairsMap[st.selectedLeft] = rObj.originalIndex;
+          st.selectedLeft = null;
+          renderCurrentItem();
+        }
+      };
+      colRight.appendChild(rightCard);
+    });
+
+    grid.appendChild(colLeft);
+    grid.appendChild(colRight);
+    container.appendChild(grid);
+  }
+
+  /* --- CATEGORIZATION RENDER & LOGIC --- */
+  function renderCategorization(item, st, container) {
+    const title = document.createElement('div');
+    title.className = 'instruction';
+    title.innerText = 'Classifique cada frase na categoria adequada:';
+    container.appendChild(title);
+
+    const pool = document.createElement('div');
+    pool.className = 'cat-items-pool';
+
+    item.items.forEach((it, idx) => {
+      const card = document.createElement('div');
+      card.className = 'cat-item-card';
+
+      const text = document.createElement('div');
+      text.className = 'cat-item-text';
+      text.innerText = it.text;
+      card.appendChild(text);
+
+      const btns = document.createElement('div');
+      btns.className = 'cat-buttons';
+
+      item.categories.forEach(cat => {
+        const btn = document.createElement('button');
+        let isSelected = st.itemCategories[idx] === cat;
+        btn.className = `cat-btn ${isSelected ? 'selected' : ''} ${st.submitted ? 'disabled' : ''}`;
+        btn.innerText = cat;
+        btn.onclick = () => {
+          if (st.submitted) return;
+          st.itemCategories[idx] = cat;
+          renderCurrentItem();
+        };
+        btns.appendChild(btn);
+      });
+
+      card.appendChild(btns);
+      pool.appendChild(card);
+    });
+
+    container.appendChild(pool);
+  }
+
+  /* --- SEQUENCING RENDER & LOGIC --- */
+  function renderSequencing(item, st, container) {
+    const title = document.createElement('div');
+    title.className = 'instruction';
+    title.innerText = 'Ordene as frases para formar um diálogo coerente:';
+    container.appendChild(title);
+
+    const list = document.createElement('div');
+    list.className = 'seq-list';
+
+    st.currentOrder.forEach((itemIdx, pos) => {
+      const card = document.createElement('div');
+      card.className = 'seq-item';
+
+      const text = document.createElement('div');
+      text.className = 'seq-text';
+      text.innerText = item.items_shuffled[itemIdx];
+
+      const controls = document.createElement('div');
+      controls.className = 'seq-controls';
+
+      const btnUp = document.createElement('button');
+      btnUp.className = 'seq-btn';
+      btnUp.innerText = '▲';
+      btnUp.disabled = pos === 0 || st.submitted;
+      btnUp.onclick = () => {
+        let temp = st.currentOrder[pos];
+        st.currentOrder[pos] = st.currentOrder[pos - 1];
+        st.currentOrder[pos - 1] = temp;
+        renderCurrentItem();
+      };
+
+      const btnDown = document.createElement('button');
+      btnDown.className = 'seq-btn';
+      btnDown.innerText = '▼';
+      btnDown.disabled = pos === st.currentOrder.length - 1 || st.submitted;
+      btnDown.onclick = () => {
+        let temp = st.currentOrder[pos];
+        st.currentOrder[pos] = st.currentOrder[pos + 1];
+        st.currentOrder[pos + 1] = temp;
+        renderCurrentItem();
+      };
+
+      controls.appendChild(btnUp);
+      controls.appendChild(btnDown);
+      card.appendChild(text);
+      card.appendChild(controls);
+      list.appendChild(card);
+    });
+
+    container.appendChild(list);
+  }
+
+  /* --- ODD ONE OUT RENDER & LOGIC --- */
+  function renderOddOneOut(item, st, container) {
+    const title = document.createElement('div');
+    title.className = 'instruction';
+    title.innerText = 'Identifique qual das frases NÃO pertence ao grupo:';
+    container.appendChild(title);
+
+    const list = document.createElement('div');
+    list.className = 'odd-list';
+
+    item.options.forEach((opt, idx) => {
+      const card = document.createElement('div');
+      let isSelected = st.selectedIndex === idx;
+      card.className = `odd-card ${isSelected ? 'selected' : ''} ${st.submitted ? 'disabled' : ''}`;
+      card.innerText = opt;
+      card.onclick = () => {
+        if (st.submitted) return;
+        st.selectedIndex = idx;
+        renderCurrentItem();
+      };
+      list.appendChild(card);
+    });
+
+    container.appendChild(list);
+  }
+
+  /* --- VALIDATION LOGIC --- */
+  function canSubmit() {
+    const item = moduleData.items[currentIndex];
+    const st = state[currentIndex];
+
+    if (item.type === 'audio_matching' || item.type === 'text_matching') {
+      return Object.keys(st.pairsMap).length === item.pairs.length;
+    } else if (item.type === 'categorization') {
+      return Object.keys(st.itemCategories).length === item.items.length;
+    } else if (item.type === 'sequencing') {
+      return true; // Always has order
+    } else if (item.type === 'odd_one_out') {
+      return st.selectedIndex !== null;
+    }
+    return false;
+  }
+
+  function handleAction() {
+    const st = state[currentIndex];
+    const item = moduleData.items[currentIndex];
+
+    if (!st.submitted) {
+      // Evaluate Answer
+      let correct = false;
+
+      if (item.type === 'audio_matching' || item.type === 'text_matching') {
+        correct = item.pairs.every((pair, idx) => st.pairsMap[idx] === idx);
+      } else if (item.type === 'categorization') {
+        correct = item.items.every((it, idx) => st.itemCategories[idx] === it.correct_category);
+      } else if (item.type === 'sequencing') {
+        correct = st.currentOrder.every((val, idx) => val === item.correct_order[idx]);
+      } else if (item.type === 'odd_one_out') {
+        correct = st.selectedIndex === item.correct_index;
+      }
+
+      st.submitted = true;
+      st.isCorrect = correct;
+      if (correct) score++;
+
+      renderCurrentItem();
+    } else {
+      // Next item or summary
+      if (currentIndex < totalItems - 1) {
+        currentIndex++;
+        renderCurrentItem();
+      } else {
+        renderSummary();
+      }
+    }
+  }
+
+  function prevItem() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderCurrentItem();
+    }
+  }
+
+  function renderSummary() {
+    updateHeader();
+    document.getElementById('itemCounter').innerText = "Módulo Concluído!";
+    document.getElementById('progressBar').style.width = `100%`;
+
+    const content = document.getElementById('contentArea');
+    content.innerHTML = `
+      <div class="summary-container">
+        <h2 class="summary-title">Parabéns! Você concluiu o módulo.</h2>
+        <div class="summary-score">${score} / ${totalItems}</div>
+        <p>Você acertou ${score} de ${totalItems} questões.</p>
+        <button class="btn btn-primary" onclick="restartModule()">Revisar Módulo</button>
+      </div>
+    `;
+
+    document.getElementById('footerNav').style.display = 'none';
+  }
+
+  function restartModule() {
+    currentIndex = 0;
+    score = 0;
+    initState();
+    document.getElementById('footerNav').style.display = 'flex';
+    renderCurrentItem();
+  }
+
+  function escapeQuotes(str) {
+    return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
+
+  // Start Module
+  initState();
+  renderCurrentItem();
+</script>
+</body>
+</html>
