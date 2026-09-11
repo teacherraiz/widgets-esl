@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluate - Mini App</title>
+    <style>
+        :root {
+            --primary: #FF7A00;
+            --secondary: #1E5AA8;
+            --bg: #FFF8F0;
+            --card-bg: #FFFFFF;
+            --correct: #1E5AA8;
+            --incorrect: #C75000;
+            --text: #2D3748;
+            --text-light: #718096;
+            --border: #E2E8F0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        .widget-container {
+            width: 100%;
+            max-width: 650px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 520px;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .top-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .item-counter {
+            color: var(--text-light);
+        }
+
+        .score-counter {
+            color: var(--secondary);
+            background-color: rgba(30, 90, 168, 0.1);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .progress-bar-bg {
+            height: 8px;
+            background-color: #EDF2F7;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Item Content */
+        .item-card {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .item-title {
+            font-size: 18px;
+            color: var(--secondary);
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .audio-btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            align-self: flex-start;
+            transition: opacity 0.2s;
+        }
+
+        .audio-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Options & Inputs */
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background-color: #F7FAFC;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 15px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--secondary);
+            background-color: #F0F4F8;
+        }
+
+        .option-btn.selected {
+            border-color: var(--secondary);
+            background-color: rgba(30, 90, 168, 0.05);
+        }
+
+        .option-btn.correct-choice {
+            border-color: var(--correct);
+            background-color: rgba(30, 90, 168, 0.1);
+            color: var(--correct);
+            font-weight: 600;
+        }
+
+        .option-btn.incorrect-choice {
+            border-color: var(--incorrect);
+            background-color: rgba(199, 80, 0, 0.1);
+            color: var(--incorrect);
+        }
+
+        .input-text {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-text:focus:not(:disabled) {
+            border-color: var(--secondary);
+        }
+
+        .textarea-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            outline: none;
+        }
+
+        .textarea-input:focus:not(:disabled) {
+            border-color: var(--secondary);
+        }
+
+        /* Ranking List */
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #F7FAFC;
+            border: 2px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+
+        .rank-item-text {
+            font-size: 14px;
+            flex-grow: 1;
+            padding-right: 12px;
+        }
+
+        .rank-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .rank-btn {
+            background-color: #EDF2F7;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rank-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Submit Action inside Item */
+        .confirm-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .confirm-btn:hover {
+            background-color: #E66E00;
+        }
+
+        /* Feedback Box */
+        .feedback-box {
+            padding: 14px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .feedback-box.correct {
+            display: block;
+            background-color: rgba(30, 90, 168, 0.1);
+            border: 1px solid var(--correct);
+            color: var(--correct);
+        }
+
+        .feedback-box.incorrect {
+            display: block;
+            background-color: rgba(199, 80, 0, 0.1);
+            border: 1px solid var(--incorrect);
+            color: var(--incorrect);
+        }
+
+        /* Footer Navigation */
+        .footer-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .prev-btn {
+            background-color: #EDF2F7;
+            color: var(--text);
+        }
+
+        .prev-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .next-btn {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .next-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Summary Screen */
+        .summary-card {
+            text-align: center;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .summary-title {
+            font-size: 24px;
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .summary-score {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 12px 0;
+        }
+
+        .restart-btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .highlight-box {
+            background-color: #F7FAFC;
+            border-left: 4px solid var(--secondary);
+            padding: 12px;
+            font-style: italic;
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="widget-container">
+    <!-- Header -->
+    <div class="header">
+        <div class="top-info">
+            <span class="item-counter" id="item-counter">Item 1 de 10</span>
+            <span class="score-counter" id="score-counter">0 de 10 corretas</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div id="content-area" class="item-card">
+        <!-- Dynamic content injected here -->
+    </div>
+
+    <!-- Summary Area (Hidden by default) -->
+    <div id="summary-area" class="summary-card hidden">
+        <h2 class="summary-title">Avaliação Concluída!</h2>
+        <p style="color: var(--text-light);">Você finalizou todos os exercícios do Bloco 5.</p>
+        <div class="summary-score" id="final-score">0 / 10</div>
+        <button class="restart-btn" id="restart-btn">Refazer Avaliação</button>
+    </div>
+
+    <!-- Navigation Footer -->
+    <div class="footer-nav" id="footer-nav">
+        <button class="nav-btn prev-btn" id="prev-btn" disabled>Anterior</button>
+        <button class="nav-btn next-btn" id="next-btn" disabled>Próximo</button>
+    </div>
+</div>
+
+<script>
+    const data = {"prompt_source": "C", "topic": "Closed Questions and Yes/no + subject + auxiliary Answers (do - did - will - would)", "theme": "B. IMMIGRANT", "cefr_level": "A1", "accent": "en-GB", "brand": "Teacher dos Famosos", "module_id": "5_evaluate", "audio_ratio_target": 0.2, "items": [{"type": "audio_paraphrase", "audio_text": "Does Maria Luísa study here every day?", "sentence_options": ["Is Maria Luísa a student here daily?", "Did Maria Luísa study here yesterday?", "Will Maria Luísa study here next year?"], "correct_index": 0, "explanation": "A pergunta no áudio quer saber se Maria Luísa estuda na escola todos os dias (rotina no presente)."}, {"type": "audio_paraphrase", "audio_text": "Would you like some tea after the church service?", "sentence_options": ["Do you want tea right now?", "Can I offer you some tea after church?", "Did you drink tea at church?"], "correct_index": 1, "explanation": "'Would you like...?' equivale a oferecer algo educadamente ('Can I offer you...?')."}, {"type": "paraphrase_quiz", "sentence_options": ["Did she finish her school homework?", "Has she got homework?", "Will she finish her school homework?"], "correct_index": 0, "explanation": "'Did she finish...?' avalia especificamente se a tarefa escolar foi concluída no passado."}, {"type": "paraphrase_quiz", "sentence_options": ["Will you attend Sunday church?", "Do you go to Sunday church?", "Did you go to Sunday church?"], "correct_index": 0, "explanation": "'Will you attend...?' pergunta se a pessoa pretende ir à igreja no futuro."}, {"type": "rank_best_answer", "question": "A professora pergunta: 'Did Maria Luísa speak English in class today?' Qual a ordem da melhor para a pior resposta?", "answer_options": ["Yes, she did.", "Yes, she speaks.", "Yes, she is."], "correct_ranking": [0, 1, 2], "explanation": "'Yes, she did' é a resposta perfeita (alinhada ao passado da pergunta). 'Yes, she speaks' muda o tempo verbal. 'Yes, she is' erra o auxiliar totalmente."}, {"type": "rank_best_answer", "question": "Um membro da igreja pergunta: 'Would you like to join our choir?' Qual a ordem das respostas da mais adequada para a menos adequada?", "answer_options": ["Yes, I would. Thank you!", "Yes, I will.", "Yes, I do."], "correct_ranking": [0, 1, 2], "explanation": "'Yes, I would' responde diretamente à gentileza do 'Would'. 'Yes, I will' aceita, mas muda o tom. 'Yes, I do' erra o auxiliar da pergunta."}, {"type": "justify_choice", "question": "Por que dizemos 'Yes, she does' e NÃO 'Yes, she has' para a pergunta 'Does Maria Luísa have school uniform?'", "options": ["Porque devemos sempre repetir o auxiliar usado na pergunta ('Does').", "Porque 'does' é mais bonito que 'has'.", "Porque 'has' não existe em inglês."], "correct_index": 0, "justification_prompt": "Explique por que o verbo auxiliar da pergunta define a resposta curta."}, {"type": "justify_choice", "question": "Qual é a vantagem de responder 'No, I didn't' em vez de responder apenas 'No' para uma professora britânica?", "options": ["Demonstra domínio da gramática e soa muito mais polido e natural.", "Apenas para falar mais palavras e demorar mais.", "Não há vantagem nenhuma, responder apenas 'No' é melhor."], "correct_index": 0, "justification_prompt": "Explique o impacto cultural de usar respostas curtas completas no Reino Unido."}, {"type": "peer_correction", "incorrect_sentence": "Teacher: Did Maria Luísa complete her reading? Mother: Yes, she complete.", "correct_answer": "Yes, she did.", "explanation": "Em inglês, não se repete o verbo principal na resposta curta. Substituímos o verbo pelo auxiliar correspondente ('did')."}, {"type": "peer_correction", "incorrect_sentence": "Church member: Will you attend the service tomorrow? Mother: Yes, I do.", "correct_answer": "Yes, I will.", "explanation": "A pergunta foi feita no futuro com 'Will', portanto a resposta deve usar o mesmo auxiliar de futuro ('will')."}]};
+
+    let currentIndex = 0;
+    const totalItems = data.items.length;
+    let userAnswers = Array(totalItems).fill(null).map(() => ({
+        answered: false,
+        isCorrect: false,
+        userState: null
+    }));
+
+    // DOM Elements
+    const itemCounterEl = document.getElementById('item-counter');
+    const scoreCounterEl = document.getElementById('score-counter');
+    const progressBarEl = document.getElementById('progress-bar');
+    const contentAreaEl = document.getElementById('content-area');
+    const summaryAreaEl = document.getElementById('summary-area');
+    const footerNavEl = document.getElementById('footer-nav');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const finalScoreEl = document.getElementById('final-score');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // TTS Logic
+    function playAudio(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        const accent = data.accent || 'en-GB';
+        
+        let voices = window.speechSynthesis.getVoices();
+        let voice = voices.find(v => v.lang.startsWith(accent)) || voices.find(v => v.lang.startsWith('en'));
+        if (voice) utterance.voice = voice;
+        utterance.lang = accent;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Free text normalization logic
+    function normalizeText(str) {
+        if (!str) return '';
+        let s = str.trim().replace(/\s+/g, ' ').toLowerCase();
+        s = s.replace(/[.,!?;:]+$/, '');
+        if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+            s = s.slice(1, -1).trim();
+        }
+        return s.replace(/[.,!?;:]+$/, '');
+    }
+
+    function updateHeader() {
+        itemCounterEl.textContent = `Item ${currentIndex + 1} de ${totalItems}`;
+        const correctCount = userAnswers.filter(a => a.isCorrect).length;
+        scoreCounterEl.textContent = `${correctCount} de ${totalItems} corretas`;
+        progressBarEl.style.width = `${((currentIndex + 1) / totalItems) * 100}%`;
+    }
+
+    function renderCurrentItem() {
+        updateHeader();
+        contentAreaEl.innerHTML = '';
+        
+        const item = data.items[currentIndex];
+        const state = userAnswers[currentIndex];
+
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = !state.answered;
+        nextBtn.textContent = (currentIndex === totalItems - 1) ? 'Finalizar' : 'Próximo';
+
+        switch (item.type) {
+            case 'audio_paraphrase':
+            case 'paraphrase_quiz':
+                renderParaphrase(item, state);
+                break;
+            case 'rank_best_answer':
+                renderRank(item, state);
+                break;
+            case 'justify_choice':
+                renderJustify(item, state);
+                break;
+            case 'peer_correction':
+                renderPeerCorrection(item, state);
+                break;
+        }
+    }
+
+    // Type 1 & 2: Audio Paraphrase & Paraphrase Quiz
+    function renderParaphrase(item, state) {
+        const title = document.createElement('h3');
+        title.className = 'item-title';
+        title.textContent = item.type === 'audio_paraphrase' ? 'Ouça e escolha a melhor paráfrase:' : 'Escolha a frase com o mesmo sentido:';
+        contentAreaEl.appendChild(title);
+
+        if (item.audio_text) {
+            const audioBtn = document.createElement('button');
+            audioBtn.className = 'audio-btn';
+            audioBtn.innerHTML = '🔊 Ouvir Áudio';
+            audioBtn.onclick = () => playAudio(item.audio_text);
+            contentAreaEl.appendChild(audioBtn);
+        }
+
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'options-container';
+
+        item.sentence_options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+
+            if (state.answered) {
+                btn.disabled = true;
+                if (idx === item.correct_index) btn.classList.add('correct-choice');
+                if (state.userState === idx && idx !== item.correct_index) btn.classList.add('incorrect-choice');
+            } else {
+                btn.onclick = () => handleParaphraseSelection(idx, item.correct_index);
+            }
+            optionsContainer.appendChild(btn);
+        });
+
+        contentAreaEl.appendChild(optionsContainer);
+        appendFeedbackBox(item.explanation, state);
+    }
+
+    function handleParaphraseSelection(selectedIndex, correctIndex) {
+        const isCorrect = selectedIndex === correctIndex;
+        userAnswers[currentIndex] = {
+            answered: true,
+            isCorrect: isCorrect,
+            userState: selectedIndex
+        };
+        renderCurrentItem();
+    }
+
+    // Type 3: Rank Best Answer
+    function renderRank(item, state) {
+        const title = document.createElement('h3');
+        title.className = 'item-title';
+        title.textContent = item.question;
+        contentAreaEl.appendChild(title);
+
+        if (!state.userState) {
+            // Store indices order
+            state.tempRank = item.answer_options.map((_, i) => i);
+        }
+
+        const currentRank = state.answered ? state.userState : state.tempRank;
+
+        const rankList = document.createElement('div');
+        rankList.className = 'rank-list';
+
+        currentRank.forEach((originalIdx, pos) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'rank-item';
+
+            const text = document.createElement('span');
+            text.className = 'rank-item-text';
+            text.textContent = `${pos + 1}º - ${item.answer_options[originalIdx]}`;
+            itemDiv.appendChild(text);
+
+            if (!state.answered) {
+                const controls = document.createElement('div');
+                controls.className = 'rank-controls';
+
+                const upBtn = document.createElement('button');
+                upBtn.className = 'rank-btn';
+                upBtn.textContent = '▲';
+                upBtn.disabled = pos === 0;
+                upBtn.onclick = () => moveRankItem(pos, pos - 1);
+
+                const downBtn = document.createElement('button');
+                downBtn.className = 'rank-btn';
+                downBtn.textContent = '▼';
+                downBtn.disabled = pos === currentRank.length - 1;
+                downBtn.onclick = () => moveRankItem(pos, pos + 1);
+
+                controls.appendChild(upBtn);
+                controls.appendChild(downBtn);
+                itemDiv.appendChild(controls);
+            }
+
+            rankList.appendChild(itemDiv);
+        });
+
+        contentAreaEl.appendChild(rankList);
+
+        if (!state.answered) {
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'confirm-btn';
+            confirmBtn.textContent = 'Confirmar Ordem';
+            confirmBtn.onclick = () => handleRankConfirm(item.correct_ranking);
+            contentAreaEl.appendChild(confirmBtn);
+        }
+
+        appendFeedbackBox(item.explanation, state);
+    }
+
+    function moveRankItem(fromIndex, toIndex) {
+        const rank = userAnswers[currentIndex].tempRank;
+        const temp = rank[fromIndex];
+        rank[fromIndex] = rank[toIndex];
+        rank[toIndex] = temp;
+        renderCurrentItem();
+    }
+
+    function handleRankConfirm(correctRanking) {
+        const currentRank = userAnswers[currentIndex].tempRank;
+        const isCorrect = JSON.stringify(currentRank) === JSON.stringify(correctRanking);
+        userAnswers[currentIndex] = {
+            answered: true,
+            isCorrect: isCorrect,
+            userState: [...currentRank]
+        };
+        renderCurrentItem();
+    }
+
+    // Type 4: Justify Choice
+    function renderJustify(item, state) {
+        const title = document.createElement('h3');
+        title.className = 'item-title';
+        title.textContent = item.question;
+        contentAreaEl.appendChild(title);
+
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'options-container';
+
+        item.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+
+            if (state.answered) {
+                btn.disabled = true;
+                if (idx === item.correct_index) btn.classList.add('correct-choice');
+                if (state.userState?.choice === idx && idx !== item.correct_index) btn.classList.add('incorrect-choice');
+            } else {
+                if (state.tempChoice === idx) btn.classList.add('selected');
+                btn.onclick = () => {
+                    state.tempChoice = idx;
+                    renderCurrentItem();
+                };
+            }
+            optionsContainer.appendChild(btn);
+        });
+
+        contentAreaEl.appendChild(optionsContainer);
+
+        if (state.tempChoice !== undefined || state.answered) {
+            const justLabel = document.createElement('p');
+            justLabel.style.fontSize = '14px';
+            justLabel.style.fontWeight = '600';
+            justLabel.style.marginTop = '8px';
+            justLabel.textContent = item.justification_prompt;
+            contentAreaEl.appendChild(justLabel);
+
+            const textarea = document.createElement('textarea');
+            textarea.className = 'textarea-input';
+            textarea.placeholder = 'Escreva sua justificativa aqui (opcional)...';
+            textarea.value = state.answered ? (state.userState.justification || '') : (state.tempJustification || '');
+            textarea.disabled = state.answered;
+            textarea.oninput = (e) => { state.tempJustification = e.target.value; };
+            contentAreaEl.appendChild(textarea);
+
+            if (!state.answered) {
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'confirm-btn';
+                confirmBtn.textContent = 'Confirmar Resposta';
+                confirmBtn.onclick = () => {
+                    const isCorrect = state.tempChoice === item.correct_index;
+                    userAnswers[currentIndex] = {
+                        answered: true,
+                        isCorrect: isCorrect,
+                        userState: {
+                            choice: state.tempChoice,
+                            justification: state.tempJustification || ''
+                        }
+                    };
+                    renderCurrentItem();
+                };
+                contentAreaEl.appendChild(confirmBtn);
+            }
+        }
+
+        appendFeedbackBox("Explicação: A escolha correta depende de alinhar o verbo auxiliar à pergunta.", state);
+    }
+
+    // Type 5: Peer Correction
+    function renderPeerCorrection(item, state) {
+        const title = document.createElement('h3');
+        title.className = 'item-title';
+        title.textContent = 'Corrija o erro na frase abaixo:';
+        contentAreaEl.appendChild(title);
+
+        const sentenceBox = document.createElement('div');
+        sentenceBox.className = 'highlight-box';
+        sentenceBox.textContent = item.incorrect_sentence;
+        contentAreaEl.appendChild(sentenceBox);
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'input-text';
+        input.placeholder = 'Digite a frase ou trecho correto...';
+        input.value = state.answered ? state.userState : (state.tempInput || '');
+        input.disabled = state.answered;
+        input.oninput = (e) => { state.tempInput = e.target.value; };
+        contentAreaEl.appendChild(input);
+
+        if (!state.answered) {
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'confirm-btn';
+            confirmBtn.textContent = 'Conferir Correção';
+            confirmBtn.onclick = () => {
+                const normalizedUser = normalizeText(state.tempInput || '');
+                const normalizedCorrect = normalizeText(item.correct_answer);
+                const isCorrect = normalizedUser === normalizedCorrect;
+
+                userAnswers[currentIndex] = {
+                    answered: true,
+                    isCorrect: isCorrect,
+                    userState: state.tempInput || ''
+                };
+                renderCurrentItem();
+            };
+            contentAreaEl.appendChild(confirmBtn);
+        }
+
+        appendFeedbackBox(item.explanation, state);
+    }
+
+    function appendFeedbackBox(explanationText, state) {
+        if (!state.answered) return;
+
+        const box = document.createElement('div');
+        box.className = `feedback-box ${state.isCorrect ? 'correct' : 'incorrect'}`;
+        
+        const title = document.createElement('strong');
+        title.textContent = state.isCorrect ? '✓ Resposta Correta!' : '✕ Resposta Incorreta.';
+        box.appendChild(title);
+
+        const text = document.createElement('p');
+        text.style.marginTop = '4px';
+        text.textContent = explanationText;
+        box.appendChild(text);
+
+        contentAreaEl.appendChild(box);
+    }
+
+    function showSummary() {
+        contentAreaEl.classList.add('hidden');
+        footerNavEl.classList.add('hidden');
+        summaryAreaEl.classList.remove('hidden');
+
+        const correctCount = userAnswers.filter(a => a.isCorrect).length;
+        finalScoreEl.textContent = `${correctCount} / ${totalItems}`;
+        
+        progressBarEl.style.width = '100%';
+        itemCounterEl.textContent = `Concluído`;
+        scoreCounterEl.textContent = `${correctCount} de ${totalItems} corretas`;
+    }
+
+    // Navigation events
+    prevBtn.onclick = () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderCurrentItem();
+        }
+    };
+
+    nextBtn.onclick = () => {
+        if (currentIndex < totalItems - 1) {
+            currentIndex++;
+            renderCurrentItem();
+        } else {
+            showSummary();
+        }
+    };
+
+    restartBtn.onclick = () => {
+        userAnswers = Array(totalItems).fill(null).map(() => ({
+            answered: false,
+            isCorrect: false,
+            userState: null
+        }));
+        currentIndex = 0;
+        contentAreaEl.classList.remove('hidden');
+        footerNavEl.classList.remove('hidden');
+        summaryAreaEl.classList.add('hidden');
+        renderCurrentItem();
+    };
+
+    // Voice preload
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            window.speechSynthesis.getVoices();
+        };
+    }
+
+    // Init
+    renderCurrentItem();
+</script>
+
+</body>
+</html>
